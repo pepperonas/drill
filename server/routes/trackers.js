@@ -28,6 +28,8 @@ function gamiCtx(db, user) {
     volume: db.sumVolume.get(user.id).v,
     metrics: db.countEntries.get(user.id).n,
     nutritionDays: db.listNutrition.all(user.id, '0000-00-00').length,
+    records: db.listPRs.all(user.id).length,
+    trackers: db.countTrackers.get(user.id).n,
   };
 }
 

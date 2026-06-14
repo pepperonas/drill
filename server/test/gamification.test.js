@@ -72,6 +72,24 @@ test('achievements unlock once and award bonus xp', () => {
   assert.equal(again.length, 0);
 });
 
+test('long-term & PR/tracker achievements unlock at their thresholds', () => {
+  const db = openDb(':memory:');
+  const u = freshUser(db);
+  u.streak_current = 14;
+  const ctx = { checkins: 50, workouts: 100, volume: 50000, metrics: 100, nutritionDays: 30, records: 10, trackers: 8 };
+  const newly = checkAchievements(db, u, ctx, '2026-01-01');
+  const codes = new Set(newly.map((a) => a.code));
+  // ctx- and streak-driven achievements (level achievements derive from real XP,
+  // tested separately via awardXp leveling).
+  for (const c of ['checkins_50', 'streak_14', 'workouts_100', 'volume_50t', 'first_pr', 'prs_10',
+    'tracker_variety', 'entries_100', 'nutrition_30']) {
+    assert.ok(codes.has(c), `expected ${c} to unlock`);
+  }
+  // higher tiers not yet reached
+  assert.ok(!codes.has('checkins_365'));
+  assert.ok(!codes.has('streak_30'));
+});
+
 test('progress percentage stays within 0..100', () => {
   for (const xp of [0, 1, 99, 100, 500, 5000]) {
     const p = levelProgress(xp);

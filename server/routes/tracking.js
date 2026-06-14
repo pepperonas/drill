@@ -46,8 +46,10 @@ function gamiCtx(db, user) {
     checkins: db.countCheckins.get(user.id).n,
     workouts: db.countWorkouts.get(user.id).n,
     volume: db.sumVolume.get(user.id).v,
-    metrics: db.listAllMetrics.all(user.id).length,
+    metrics: db.countEntries.get(user.id).n,
     nutritionDays: db.listNutrition.all(user.id, '0000-00-00').length,
+    records: db.listPRs.all(user.id).length,
+    trackers: db.countTrackers.get(user.id).n,
   };
 }
 
