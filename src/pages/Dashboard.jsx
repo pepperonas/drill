@@ -19,6 +19,7 @@ export default function Dashboard() {
     try {
       const res = await api.checkin({ kind: 'gym' });
       if (res.isNew) toast.show('🔥 Eingecheckt! +25 XP');
+      if (res.frozen > 0) toast.show(`${data.freeze?.icon || '🧊'} Serie geschützt – ${res.frozen} Tag(e) überbrückt`, { celebrate: true });
       toast.celebrate(res.gami, res.leveled);
       await load();
     } finally { setBusy(false); }
@@ -44,6 +45,15 @@ export default function Dashboard() {
             <div className="progress-track"><div className="progress-fill" style={{ width: lvl.pct + '%' }} /></div>
           </div>
         </div>
+        {data.freeze?.enabled && (
+          <div className="list-item" style={{ borderBottom: 'none', padding: '12px 2px 2px', gap: 8 }} title={data.freeze.name}>
+            <span style={{ fontSize: '1.2rem' }}>{data.freeze.icon}</span>
+            <span className="body" style={{ flex: 1 }}>{data.freeze.name}</span>
+            <span className="mono-num" style={{ fontWeight: 700, color: data.freeze.color || 'var(--primary)' }}>
+              {data.freeze.balance} / {data.freeze.max}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Check-in CTA */}

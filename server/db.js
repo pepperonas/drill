@@ -196,6 +196,28 @@ export function openDb(path) {
       RETURNING *`),
     listPRs: db.prepare(
       'SELECT * FROM personal_records WHERE user_id = ? ORDER BY est_1rm DESC'),
+
+    // ---- streak freeze ----
+    getFreeze: db.prepare('SELECT * FROM streak_freeze WHERE user_id = ?'),
+    createFreeze: db.prepare(`
+      INSERT INTO streak_freeze (user_id, description, updated_at)
+      VALUES (@user_id, @description, @now) RETURNING *`),
+    updateFreezeConfig: db.prepare(`
+      UPDATE streak_freeze SET
+        enabled=@enabled, name=@name, icon=@icon, color=@color, description=@description,
+        max_freezes=@max_freezes, count_mode=@count_mode, auto_apply=@auto_apply,
+        earn_per_checkins=@earn_per_checkins, earn_per_streak=@earn_per_streak,
+        earn_weekly=@earn_weekly, earn_on_levelup=@earn_on_levelup, updated_at=@now
+      WHERE user_id=@user_id RETURNING *`),
+    updateFreezeState: db.prepare(`
+      UPDATE streak_freeze SET balance=@balance, ck_milestone=@ck_milestone,
+        st_milestone=@st_milestone, lvl_milestone=@lvl_milestone, last_weekly_grant=@last_weekly_grant
+      WHERE user_id=@user_id`),
+    insertFreezeEvent: db.prepare(`
+      INSERT INTO freeze_events (user_id, type, amount, reason, day, created_at)
+      VALUES (@user_id, @type, @amount, @reason, @day, @now)`),
+    listFreezeEvents: db.prepare(
+      'SELECT * FROM freeze_events WHERE user_id = ? ORDER BY created_at DESC LIMIT ?'),
   };
 
   return stmt;

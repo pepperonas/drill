@@ -39,6 +39,7 @@ export default function Attendance() {
     try {
       const res = await api.checkin({ day: today, kind });
       if (res.isNew) toast.show('🔥 Eingecheckt! Serie: ' + res.gami.streak);
+      if (res.frozen > 0) toast.show(`🧊 Serie geschützt – ${res.frozen} Tag(e) überbrückt`, { celebrate: true });
       toast.celebrate(res.gami, res.leveled);
       await load();
     } finally { setBusy(false); }

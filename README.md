@@ -44,6 +44,7 @@ Eine multitenant Fitness- & Körper-Tracking-PWA mit Google-Login, Charts, Gamif
 - **📅 Anwesenheit & Training** — täglicher Check-in mit 17-Wochen-Heatmap; Workouts mit Kategorie, Dauer und Sätzen (Übung · kg · Wdh.).
 - **🥗 Ernährung** — Kalorien & Makros **oder** einfache Tagesbewertung + Wasser.
 - **🎮 Volle Gamification** — XP pro Aktivität (pro Tracker einstellbar), Level-Kurve, Tages-**Streaks** mit Bonus, **29 freischaltbare Erfolge** inkl. erreichbarer Langzeit-Meilensteine (100-Tage-Serie, 365 Check-ins gesamt, Level 50, 500 t Volumen).
+- **🧊 Konfigurierbarer Streak-Schutz** — voll anpassbares „Streak-Freeze"-System: **Wertung** (max. Anzahl, Verdienst-Modi: pro Streak-Meilenstein / pro X Check-ins / Wochengeschenk / bei Level-Up, ob ein geschützter Tag die Serie *wachsen lässt* oder nur *erhält*, automatischer Einsatz) **und Gestaltung** (Name, Symbol, Farbe, Beschreibung). Verpasste Tage werden automatisch überbrückt, solange Schilde vorhanden sind.
 - **📧 Motivations-E-Mails** — wöchentlicher Report, Streak-in-Gefahr-Alert, täglicher Nudge. Double-Opt-in + 1-Klick-Abmeldung, geplant via `node-cron`.
 - **🎨 Material 3 Expressive** — tonal surfaces, 10-stufige Shape-Scale, Spring-Motion, emphasized Typography (Roboto Flex), Electric-Lime-Akzent auf tiefem Neutral.
 - **📱 PWA** — installierbar, offline-Shell, Service Worker mit versioniertem Cache.
@@ -70,9 +71,9 @@ Eine multitenant Fitness- & Körper-Tracking-PWA mit Google-Login, Charts, Gamif
 
 ### Datenmodell (Auszug)
 
-`users` · **`trackers`** (frei definierte Tracker) + **`tracker_entries`** · **`user_options`** (editierbare Picker) · **`personal_records`** · `checkins` · `workouts` + `workout_sets` · `nutrition_logs` · `metrics` *(legacy, migriert in `trackers`)* · `xp_events` · `user_achievements` · `email_prefs` · `email_log`
+`users` · **`trackers`** (frei definierte Tracker) + **`tracker_entries`** · **`user_options`** (editierbare Picker) · **`personal_records`** · **`streak_freeze`** (Konfig + Stand) + **`freeze_events`** (Ledger) · `checkins` · `workouts` + `workout_sets` · `nutrition_logs` · `metrics` *(legacy, migriert in `trackers`)* · `xp_events` · `user_achievements` · `email_prefs` · `email_log`
 
-Migrationen sind append-only (`server/migrations.js`); `002_trackers` legt das Tracker-System an und überführt bestehende `metrics`-Werte verlustfrei in Tracker der Kategorie *body*.
+Migrationen sind append-only (`server/migrations.js`); `002_trackers` legt das Tracker-System an und überführt bestehende `metrics`-Werte verlustfrei in Tracker der Kategorie *body*; `003_streak_freeze` ergänzt den konfigurierbaren Streak-Schutz.
 
 ### API-Überblick (Auszug, alles unter `/api`)
 
@@ -85,6 +86,7 @@ Migrationen sind append-only (`server/migrations.js`); `002_trackers` legt das T
 | `GET /insights/correlation?a=&b=&range=` | Pearson-r + ausgerichtete Paare zweier Tracker |
 | `GET/POST /options/:domain`, `DELETE /options/:id` | editierbare Picker (`activity`, `workout_category`) |
 | `GET /records` · `GET /exercises` | Personal Records · Übungs-Bibliothek |
+| `GET/PUT /streak-freeze` | Streak-Schutz lesen / konfigurieren (Wertung + Gestaltung) |
 | `GET /dashboard` · `GET /gamification` | Aggregate (Ziele, PRs, Level, Streak, Erfolge) |
 | `POST /checkins` · `POST /workouts` · `POST /nutrition` | spezialisiertes Tracking (Streak / Sätze+PR / Makros) |
 | `GET /auth/google` · `GET /auth/callback` · `GET /me` | OAuth & Session |
@@ -111,12 +113,13 @@ npm run dev                   # http://localhost:5180  (proxyt /api -> :4252)
 ### Tests
 
 ```bash
-cd server && npm test         # node:test — 26 Tests
+cd server && npm test         # node:test — 38 Tests
 ```
 Abgedeckt: Gamification (Level-Kurve, Streaks, Achievements), Tracker-Logik (1RM, Ziel-Fortschritt,
-Korrelation/Pearson, gleitender Durchschnitt, Default-Seeding), DB-Flows (Einträge, PRs, Optionen,
-Cascade-Delete) und ein **API-Integrationstest**, der die App in-memory bootet und die Tracker-Endpunkte
-über HTTP mit Session-Cookie durchspielt.
+Korrelation/Pearson, gleitender Durchschnitt, Default-Seeding), **Streak-Freeze** (Überbrückung
+grow/preserve, Verdienst-Milestones idempotent, Wochengeschenk, ISO-Woche, Cap/Consume), DB-Flows
+(Einträge, PRs, Optionen, Cascade-Delete) und **API-Integrationstests**, die die App in-memory booten
+und Tracker- + Streak-Freeze-Endpunkte über HTTP mit Session-Cookie durchspielen.
 
 ## 📦 Build & Deploy
 

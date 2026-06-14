@@ -5,7 +5,8 @@
  * rollup (xp/level/streak) for cheap reads. Levels use a gently rising curve so
  * early levels come fast (dopamine) and later ones take real consistency.
  */
-import { dayInTz, addDays } from './time.js';
+import { dayInTz, addDays, diffDays } from './time.js';
+import { consumeFreeze, persistFreezeState } from './streakfreeze.js';
 
 export const XP = {
   checkin: 25,
@@ -63,17 +64,33 @@ export function awardXp(db, user, amount, reason, day) {
 
 /**
  * Recompute the user's streak after a check-in on `day`. A streak counts
- * consecutive calendar days with a check-in. Returns the updated streak fields.
+ * consecutive calendar days with a check-in. If `cfg` (a streak-freeze config)
+ * is given, a gap of missed days is bridged automatically by consuming freezes
+ * — preserving the streak (and, in 'grow' mode, counting the frozen days).
+ * Returns { streak, best, frozen } where `frozen` is the number of bridged days.
  */
-export function recomputeStreak(db, user, day) {
+export function recomputeStreak(db, user, day, cfg = null) {
   const prev = user.last_checkin_day;
   let streak = user.streak_current;
+  let frozen = 0;
   if (prev === day) {
     // already counted today — no change
   } else if (prev && addDays(prev, 1) === day) {
     streak = streak + 1; // consecutive
-  } else if (!prev || prev < day) {
-    streak = 1; // gap or first ever -> restart
+  } else if (prev && day > prev) {
+    const gap = diffDays(prev, day) - 1; // fully-missed days strictly between
+    if (gap > 0 && cfg && cfg.enabled && cfg.auto_apply && cfg.balance >= gap) {
+      consumeFreeze(db, user, cfg, gap, 'auto_bridge', day);
+      persistFreezeState(db, cfg);
+      frozen = gap;
+      streak += cfg.count_mode === 'grow' ? gap + 1 : 1;
+    } else if (gap > 0) {
+      streak = 1; // gap couldn't be bridged -> restart
+    } else {
+      streak = streak + 1; // adjacent (shouldn't reach here)
+    }
+  } else {
+    streak = 1; // first ever or out-of-order
   }
   const best = Math.max(user.streak_best, streak);
   db.updateUserGami.run({
@@ -81,7 +98,7 @@ export function recomputeStreak(db, user, day) {
     streak_current: streak, streak_best: best, last_checkin_day: day,
   });
   user.streak_current = streak; user.streak_best = best; user.last_checkin_day = day;
-  return { streak, best };
+  return { streak, best, frozen };
 }
 
 /**

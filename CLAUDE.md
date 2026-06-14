@@ -49,6 +49,15 @@ the session cookie's `secure` flag is auto-relaxed so http login works.
   `routes/tracking.js` runs on every workout POST and returns new PRs so the UI can celebrate.
 - **Legacy `metrics`** table is migrated into `trackers` by migration `002_trackers` (category `body`)
   and otherwise unused by the UI — don't add new features to it.
+- **Streak-freeze** (`server/streakfreeze.js`, `routes/streakfreeze.js`, tables `streak_freeze` +
+  `freeze_events`) is fully user-configurable — scoring (max, earn modes, grow-vs-preserve count,
+  auto-apply) and presentation (name/icon/color). Earning is **milestone-based & idempotent**
+  (`ck/st/lvl_milestone` store the highest already-granted level, so `reconcileEarn` can run on every
+  check-in AND daily in cron without double-granting; the streak milestone drops when a streak resets).
+  Missed days are bridged in two places: `recomputeStreak(db,user,day,cfg)` on the next check-in, and
+  the daily `runFreezeApply` cron (00:30) which also does the weekly gift + level reconcile. The freeze
+  cron runs even when email is disabled. `count_mode==='grow'` makes a frozen day count toward streak
+  length; `'preserve'` only keeps the streak alive.
 - **Sessions** are HMAC-SHA256-signed cookies (`server/session.js`), not JWTs. **OAuth** is the raw
   authorization-code flow in `server/auth.js`; the ID token is verified via Google's `tokeninfo`
   endpoint (no JWKS). This mirrors xword exactly.

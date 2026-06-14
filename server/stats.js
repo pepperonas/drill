@@ -76,6 +76,11 @@ export function dashboardSummary(db, user) {
     })
     .filter((g) => g.goal);
 
+  const f = db.getFreeze.get(user.id);
+  const freeze = f && f.enabled
+    ? { enabled: true, name: f.name, icon: f.icon, color: f.color, balance: f.balance, max: f.max_freezes }
+    : { enabled: false };
+
   return {
     today,
     checkedInToday,
@@ -84,6 +89,7 @@ export function dashboardSummary(db, user) {
     week,
     totals,
     goals,
+    freeze,
     records: db.listPRs.all(user.id).slice(0, 5),
     achievements: db.listAchievements.all(user.id),
   };

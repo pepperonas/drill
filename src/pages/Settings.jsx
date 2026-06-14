@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { api } from '../api/client.js';
+import { StreakFreezeSettings } from '../components/StreakFreezeSettings.jsx';
 
 export default function Settings() {
   const { user, prefs, emailEnabled, logout, refresh } = useAuth();
@@ -56,6 +57,8 @@ export default function Settings() {
         </div>
         <button className="btn outline" onClick={logout}>Abmelden</button>
       </div>
+
+      <StreakFreezeSettings />
 
       <div className="section-title"><span className="title">Motivations-Mails</span></div>
       <div className="card">

@@ -74,6 +74,10 @@ export const api = {
   // ---- records + exercise library ----
   records: () => req('GET', '/records'),
   exercises: () => req('GET', '/exercises'),
+
+  // ---- streak freeze ----
+  streakFreeze: () => req('GET', '/streak-freeze'),
+  updateStreakFreeze: (cfg) => req('PUT', '/streak-freeze', cfg),
 };
 
 export function loginUrl() { return '/api/auth/google'; }

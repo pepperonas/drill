@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.2.0 — Configurable streak-freeze (2026-06-15)
+
+A fully user-configurable "streak freeze" system — both **scoring** and **presentation**:
+
+- **Scoring:** max freezes, four earn modes (per streak-milestone, per X check-ins,
+  weekly gift, on level-up), `count_mode` `grow` (frozen day grows the streak) vs
+  `preserve` (only keeps it alive), and automatic application on a missed day.
+- **Presentation:** custom name, icon, color and description.
+- **Engine:** milestone-based, idempotent earning (`reconcileEarn` on check-in +
+  daily cron); missed days auto-bridged in `recomputeStreak` (next check-in) and the
+  new `runFreezeApply` cron (00:30, runs even without email). Event ledger
+  (`freeze_events`) powers the in-app history. New tables `streak_freeze` +
+  `freeze_events` (migration `003_streak_freeze`).
+- **UI:** config sheet in Settings, freeze balance on the dashboard, and a
+  "Serie geschützt" toast when a freeze is consumed.
+- Tests expanded to **38** (freeze logic + API integration).
+
 ## v1.1.3 — Achievement balancing & detail view (2026-06-14)
 
 - **Tappable achievement detail**: each badge opens a sheet explaining how to unlock

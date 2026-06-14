@@ -225,4 +225,49 @@ const MIGRATIONS = [
     FROM metrics m
     JOIN trackers t ON t.user_id = m.user_id AND t.name = m.kind AND t.category = 'body';
   `],
+
+  // ---------------------------------------------------------------------------
+  // 003: Fully configurable streak-freeze system (per user). Both the *scoring*
+  // (how freezes are earned, how many, whether a frozen day grows or only
+  // preserves the streak, auto-apply) and the *presentation* (name/icon/color/
+  // description) are user-editable. One config row + an event ledger.
+  // ---------------------------------------------------------------------------
+  ['003_streak_freeze', `
+    CREATE TABLE streak_freeze (
+      user_id      INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      enabled      INTEGER NOT NULL DEFAULT 1,
+      -- presentation
+      name         TEXT NOT NULL DEFAULT 'Streak-Schutz',
+      icon         TEXT NOT NULL DEFAULT '🧊',
+      color        TEXT NOT NULL DEFAULT '#8fd6ff',
+      description  TEXT,
+      -- scoring / valuation
+      max_freezes  INTEGER NOT NULL DEFAULT 3,
+      count_mode   TEXT NOT NULL DEFAULT 'preserve',  -- grow | preserve
+      auto_apply   INTEGER NOT NULL DEFAULT 1,
+      -- earning (each 0 = off)
+      earn_per_checkins INTEGER NOT NULL DEFAULT 0,
+      earn_per_streak   INTEGER NOT NULL DEFAULT 7,
+      earn_weekly       INTEGER NOT NULL DEFAULT 0,
+      earn_on_levelup   INTEGER NOT NULL DEFAULT 1,
+      -- balance + dedupe markers for idempotent milestone grants
+      balance      INTEGER NOT NULL DEFAULT 1,
+      ck_milestone INTEGER NOT NULL DEFAULT 0,
+      st_milestone INTEGER NOT NULL DEFAULT 0,
+      lvl_milestone INTEGER NOT NULL DEFAULT 1,
+      last_weekly_grant TEXT,
+      updated_at   INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE freeze_events (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      type       TEXT NOT NULL,        -- earn | apply
+      amount     INTEGER NOT NULL,
+      reason     TEXT,
+      day        TEXT,
+      created_at INTEGER NOT NULL
+    );
+    CREATE INDEX idx_freeze_events_user ON freeze_events(user_id, created_at);
+  `],
 ];

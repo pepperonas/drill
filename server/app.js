@@ -10,6 +10,7 @@ import { makeAuth } from './auth.js';
 import { createLimiter } from './rate-limit.js';
 import { trackingRoutes } from './routes/tracking.js';
 import { trackerRoutes } from './routes/trackers.js';
+import { streakFreezeRoutes } from './routes/streakfreeze.js';
 import { dashboardRoutes } from './routes/dashboard.js';
 import { accountRoutes } from './routes/account.js';
 
@@ -41,6 +42,7 @@ export function createApp(db) {
   // feature routers
   app.use('/api', trackingRoutes(db, auth));
   app.use('/api', trackerRoutes(db, auth));
+  app.use('/api', streakFreezeRoutes(db, auth));
   app.use('/api', dashboardRoutes(db, auth));
   app.use('/api', accountRoutes(db, auth));
 

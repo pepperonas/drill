@@ -99,3 +99,34 @@ test('workout logging detects a personal record', async () => {
   })).json();
   assert.ok(res.prs.length === 1 && res.prs[0].exercise === 'Bankdrücken');
 });
+
+test('streak-freeze config is readable and updatable', async () => {
+  const got = await (await call('GET', '/api/streak-freeze')).json();
+  assert.equal(got.config.balance, 1);            // default starter freeze
+  assert.equal(got.config.count_mode, 'preserve');
+  const upd = await (await call('PUT', '/api/streak-freeze', {
+    enabled: true, name: 'Eisschild', icon: '❄️', color: '#8fd6ff',
+    count_mode: 'grow', auto_apply: true, max_freezes: 5,
+    earn_per_checkins: 0, earn_per_streak: 7, earn_weekly: 0, earn_on_levelup: true,
+  })).json();
+  assert.equal(upd.config.name, 'Eisschild');
+  assert.equal(upd.config.count_mode, 'grow');
+  assert.equal(upd.config.max_freezes, 5);
+});
+
+test('a missed day is auto-bridged by a freeze on the next check-in', async () => {
+  // fresh user so streak state is clean
+  const user = db.upsertUser.get({ google_sub: 'freeze-user', email: 'f@b.c', name: 'F', picture: null, now: 1700000000 });
+  const ck = 'drill_session=' + sign({ uid: user.id, exp: 9999999999 }, process.env.SESSION_SECRET);
+  const post = (day) => fetch(base + '/api/checkins', {
+    method: 'POST', headers: { cookie: ck, 'content-type': 'application/json' },
+    body: JSON.stringify({ day, kind: 'gym' }),
+  }).then((r) => r.json());
+
+  await post('2026-05-01');                 // streak 1
+  const bridged = await post('2026-05-03'); // missed 05-02 -> freeze bridges it
+  assert.equal(bridged.frozen, 1);
+  assert.equal(bridged.gami.streak, 2);     // preserve: +1 for the check-in day
+  const after = await (await fetch(base + '/api/streak-freeze', { headers: { cookie: ck } })).json();
+  assert.equal(after.config.balance, 0);    // the starter freeze was consumed
+});

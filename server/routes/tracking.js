@@ -10,6 +10,7 @@ import {
   awardXp, recomputeStreak, checkAchievements, XP,
 } from '../gamification.js';
 import { est1RM } from '../trackers.js';
+import { ensureFreeze, reconcileEarn } from '../streakfreeze.js';
 
 /**
  * Detect new personal records from a workout's sets. For each exercise we keep
@@ -106,15 +107,20 @@ export function trackingRoutes(db, auth) {
     const existed = !!db.getCheckin.get(req.user.id, day);
     const c = db.upsertCheckin.get({ user_id: req.user.id, day, kind, note: (req.body && req.body.note) || null, now: now() });
     let leveled = null;
+    let frozen = 0;
     if (!existed) {
-      recomputeStreak(db, req.user, day);
+      const cfg = ensureFreeze(db, req.user);
+      const sres = recomputeStreak(db, req.user, day, cfg);
+      frozen = sres.frozen;
       leveled = awardXp(db, req.user, XP.checkin, 'checkin', day);
       // streak bonus, capped
       const bonus = Math.min(req.user.streak_current * XP.streak_bonus, 50);
       if (bonus > 0) awardXp(db, req.user, bonus, 'streak_bonus', day);
+      // earn freezes from check-in / streak / level milestones
+      reconcileEarn(db, req.user, cfg, day, db.countCheckins.get(req.user.id).n);
     }
     const newly = checkAchievements(db, req.user, gamiCtx(db, req.user), day);
-    res.json({ checkin: c, isNew: !existed, gami: gamiResult(db, req.user, newly), leveled });
+    res.json({ checkin: c, isNew: !existed, gami: gamiResult(db, req.user, newly), leveled, frozen });
   });
 
   r.delete('/checkins/:day', (req, res) => {
