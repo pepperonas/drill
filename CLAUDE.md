@@ -11,7 +11,10 @@ charts, gamification (XP, levels, streaks, badges) and motivational emails. Visu
 
 ## Layout
 
-- **Frontend** (repo root): React + Vite PWA. `src/pages/*` = routes, `src/components/*` = shared UI,
+- **Frontend** (repo root): React + Vite PWA. `src/pages/*` = routes (Dashboard, Trackers,
+  TrackerDetail, Insights, Training, Nutrition, Attendance, Achievements, Settings),
+  `src/components/*` = shared UI (Sheet, Toast, NavBar, TrackerForm/EntryInput),
+  `src/lib/trackerTypes.js` = tracker type/category/template metadata used by the forms,
   `src/theme/tokens.css` = the entire MD3 Expressive token set (colors, shape scale, motion springs).
   `src/index.css` holds the hand-built component classes (no Material Web Components).
 - **Backend** (`server/`): Express + better-sqlite3. Entry `index.js` → `app.js` (wiring) → `routes/*`.
@@ -34,6 +37,18 @@ the session cookie's `secure` flag is auto-relaxed so http login works.
 
 ## Architecture notes (the non-obvious parts)
 
+- **Flexible tracker system is the core** (`server/trackers.js`, `server/routes/trackers.js`,
+  tables `trackers` + `tracker_entries`). A tracker is any user-defined thing to log; type ∈
+  {number, scale, boolean, duration, choice, text}. Numeric-ish values live in `value`, text/choice
+  in `text_value`. Adding a new metric is a **row, not a schema change**. `server/trackers.js` holds
+  the pure logic: `seedDefaultsIfEmpty`, `goalProgress`, `est1RM` (Epley), `alignSeries`/`pearson`
+  (correlation), `movingAverage`. New users get default trackers seeded lazily on first `GET /trackers`.
+- **Editable pickers**: `user_options` (domains `activity`, `workout_category`) make the otherwise-fixed
+  check-in/workout lists user-extensible. Frontend merges built-in defaults with these.
+- **Personal records**: `personal_records` (one best est-1RM per exercise); `detectPRs` in
+  `routes/tracking.js` runs on every workout POST and returns new PRs so the UI can celebrate.
+- **Legacy `metrics`** table is migrated into `trackers` by migration `002_trackers` (category `body`)
+  and otherwise unused by the UI — don't add new features to it.
 - **Sessions** are HMAC-SHA256-signed cookies (`server/session.js`), not JWTs. **OAuth** is the raw
   authorization-code flow in `server/auth.js`; the ID token is verified via Google's `tokeninfo`
   endpoint (no JWKS). This mirrors xword exactly.

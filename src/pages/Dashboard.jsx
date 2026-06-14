@@ -1,46 +1,36 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import { api } from '../api/client.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useToast } from '../components/Toast.jsx';
-import { fmtDay } from '../lib/util.js';
 
 export default function Dashboard() {
-  const { user, today } = useAuth();
+  const { user } = useAuth();
   const toast = useToast();
   const nav = useNavigate();
   const [data, setData] = useState(null);
-  const [weights, setWeights] = useState([]);
   const [busy, setBusy] = useState(false);
 
-  const load = useCallback(async () => {
-    const [d, w] = await Promise.all([api.dashboard(), api.metrics('weight').catch(() => ({ metrics: [] }))]);
-    setData(d);
-    setWeights((w.metrics || []).map((m) => ({ day: fmtDay(m.day), value: m.value })));
-  }, []);
-
+  const load = useCallback(async () => { setData(await api.dashboard()); }, []);
   useEffect(() => { load(); }, [load]);
 
   const quickCheckin = async () => {
     setBusy(true);
     try {
-      const res = await api.checkin({ day: today, kind: 'gym' });
-      if (res.isNew) toast.show('🔥 Eingecheckt! +' + 25 + ' XP');
+      const res = await api.checkin({ kind: 'gym' });
+      if (res.isNew) toast.show('🔥 Eingecheckt! +25 XP');
       toast.celebrate(res.gami, res.leveled);
       await load();
     } finally { setBusy(false); }
   };
 
   if (!data) return <Loading />;
-
   const lvl = data.level;
-  const greeting = greetingFor(today);
 
   return (
     <div>
       <div style={{ margin: '4px 4px 18px' }}>
-        <div className="label">{greeting}</div>
+        <div className="label">{greetingFor()}</div>
         <div className="headline">{(user?.name || '').split(' ')[0] || 'Athlet'} 👋</div>
       </div>
 
@@ -73,45 +63,59 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Stat tiles */}
+      {/* Week stats */}
       <div className="grid cols-3" style={{ marginTop: 14 }}>
         <Tile v={data.week.checkins} k="Check-ins / Woche" />
         <Tile v={data.week.workouts} k="Workouts / Woche" />
         <Tile v={'+' + data.week.xpWeek} k="XP / Woche" accent />
       </div>
 
-      {/* Weight chart */}
-      <div className="section-title">
-        <span className="title">Gewichtsverlauf</span>
-        <button className="btn text" onClick={() => nav('/body')}>Alle →</button>
-      </div>
-      {weights.length >= 2 ? (
-        <div className="card" style={{ padding: '16px 8px 8px' }}>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={weights} margin={{ top: 6, right: 12, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="day" stroke="var(--on-surface-variant)" fontSize={11} tickLine={false} axisLine={false} />
-              <YAxis stroke="var(--on-surface-variant)" fontSize={11} tickLine={false} axisLine={false} domain={['dataMin - 1', 'dataMax + 1']} width={44} />
-              <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: 'var(--on-surface-variant)' }} />
-              <Area type="monotone" dataKey="value" stroke="var(--primary)" strokeWidth={3} fill="url(#g)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <div className="card empty">
-          <div className="big">📈</div>
-          <div className="body">Noch keine Gewichtsdaten. Trag deinen ersten Wert ein, um den Verlauf zu sehen.</div>
-          <button className="btn tonal" style={{ marginTop: 14 }} onClick={() => nav('/body')}>Gewicht erfassen</button>
-        </div>
+      {/* Goals */}
+      {data.goals?.length > 0 && (
+        <>
+          <div className="section-title"><span className="title">Deine Ziele</span><button className="btn text" onClick={() => nav('/trackers')}>Alle →</button></div>
+          <div className="grid">
+            {data.goals.map((g) => (
+              <div className="card tap" key={g.id} onClick={() => nav(`/trackers/${g.id}`)}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <span style={{ fontSize: '1.3rem' }}>{g.icon || '🎯'}</span>
+                  <span className="title" style={{ flex: 1 }}>{g.name}</span>
+                  <span className="mono-num" style={{ color: g.color || 'var(--primary)', fontWeight: 700 }}>
+                    {g.goal.latest ?? '–'} / {g.goal.goal}{g.unit ? ' ' + g.unit : ''}
+                  </span>
+                </div>
+                <div className="progress-track"><div className="progress-fill" style={{ width: g.goal.pct + '%', background: g.color || 'var(--primary)' }} /></div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
-      {/* Totals */}
-      <div className="grid cols-3" style={{ marginTop: 22 }}>
+      {/* Personal records */}
+      {data.records?.length > 0 && (
+        <>
+          <div className="section-title"><span className="title">Bestleistungen 🏅</span><button className="btn text" onClick={() => nav('/training')}>Training →</button></div>
+          <div className="card">
+            {data.records.map((p) => (
+              <div className="list-item" key={p.exercise}>
+                <span style={{ flex: 1 }}>{p.exercise}</span>
+                <span className="mono-num"><b>{p.weight} kg</b> × {p.reps}</span>
+                <span className="body" style={{ marginLeft: 10 }}>≈ {p.est_1rm} kg 1RM</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Insights + totals */}
+      <div className="section-title"><span className="title">Mehr</span></div>
+      <div className="card tap" onClick={() => nav('/insights')} style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+        <span style={{ fontSize: '1.8rem' }}>🔍</span>
+        <div style={{ flex: 1 }}><div className="title">Insights</div><div className="body">Zusammenhänge zwischen deinen Trackern entdecken</div></div>
+        <span style={{ color: 'var(--primary)' }}>→</span>
+      </div>
+
+      <div className="grid cols-3">
         <Tile v={data.totals.checkins} k="Check-ins gesamt" />
         <Tile v={data.totals.workouts} k="Workouts gesamt" />
         <Tile v={Math.round(data.totals.volume / 1000) + 't'} k="Volumen bewegt" />
@@ -146,11 +150,11 @@ function Loading() {
   return <div className="grid" style={{ marginTop: 12 }}>
     <div className="skeleton" style={{ height: 120 }} />
     <div className="skeleton" style={{ height: 64 }} />
-    <div className="skeleton" style={{ height: 220 }} />
+    <div className="skeleton" style={{ height: 180 }} />
   </div>;
 }
 
-function greetingFor(day) {
+function greetingFor() {
   const h = new Date().getHours();
   if (h < 11) return 'Guten Morgen';
   if (h < 18) return 'Servus';

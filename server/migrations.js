@@ -148,4 +148,81 @@ const MIGRATIONS = [
       UNIQUE(user_id, type, day)
     );
   `],
+
+  // ---------------------------------------------------------------------------
+  // 002: Universal, user-defined tracker system + flexible pickers + PRs.
+  // Anything a user wants to track becomes a "tracker" (number/scale/boolean/
+  // duration/choice/text). The old `metrics` rows are migrated in so no data
+  // is lost; body measurements simply become trackers in the 'body' category.
+  // ---------------------------------------------------------------------------
+  ['002_trackers', `
+    CREATE TABLE trackers (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name        TEXT NOT NULL,
+      type        TEXT NOT NULL DEFAULT 'number', -- number|scale|boolean|duration|choice|text
+      unit        TEXT,
+      icon        TEXT,
+      color       TEXT,
+      category    TEXT,            -- body|training|nutrition|habit|wellbeing|custom
+      options     TEXT,            -- JSON array (choice options)
+      goal_value  REAL,
+      goal_direction TEXT,         -- up|down|maintain|null
+      scale_min   INTEGER,
+      scale_max   INTEGER,
+      xp          INTEGER NOT NULL DEFAULT 10,
+      reminder_time TEXT,          -- 'HH:MM' (optional, surfaced in emails)
+      sort        INTEGER NOT NULL DEFAULT 0,
+      archived    INTEGER NOT NULL DEFAULT 0,
+      created_at  INTEGER NOT NULL
+    );
+    CREATE INDEX idx_trackers_user ON trackers(user_id, archived, sort);
+
+    CREATE TABLE tracker_entries (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      tracker_id  INTEGER NOT NULL REFERENCES trackers(id) ON DELETE CASCADE,
+      value       REAL,            -- numeric value (number/scale/duration/boolean 0|1)
+      text_value  TEXT,            -- text/choice value
+      day         TEXT NOT NULL,
+      note        TEXT,
+      created_at  INTEGER NOT NULL
+    );
+    CREATE INDEX idx_entries_tracker_day ON tracker_entries(tracker_id, day);
+
+    -- User-editable option lists for the otherwise-fixed pickers
+    -- (check-in activity types, workout categories).
+    CREATE TABLE user_options (
+      id        INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      domain    TEXT NOT NULL,     -- 'activity' | 'workout_category'
+      label     TEXT NOT NULL,
+      icon      TEXT,
+      color     TEXT,
+      sort      INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE INDEX idx_useropts ON user_options(user_id, domain, sort);
+
+    -- Auto-detected personal records per exercise (best estimated 1RM).
+    CREATE TABLE personal_records (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      exercise   TEXT NOT NULL,
+      weight     REAL,
+      reps       INTEGER,
+      est_1rm    REAL,
+      day        TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      UNIQUE(user_id, exercise)
+    );
+
+    -- Migrate existing body metrics into the tracker system.
+    INSERT INTO trackers (user_id, name, type, unit, icon, color, category, xp, sort, created_at)
+    SELECT user_id, kind, 'number', MAX(unit), '📏', '#c6ff00', 'body', 10, 0, strftime('%s','now')
+    FROM metrics GROUP BY user_id, kind;
+
+    INSERT INTO tracker_entries (tracker_id, value, day, note, created_at)
+    SELECT t.id, m.value, m.day, m.note, m.created_at
+    FROM metrics m
+    JOIN trackers t ON t.user_id = m.user_id AND t.name = m.kind AND t.category = 'body';
+  `],
 ];

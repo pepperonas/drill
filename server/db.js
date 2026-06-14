@@ -134,6 +134,68 @@ export function openDb(path) {
       INSERT OR IGNORE INTO email_log (user_id, type, day, sent_at) VALUES (?, ?, ?, ?)`),
     wasEmailSent: db.prepare(
       'SELECT 1 FROM email_log WHERE user_id = ? AND type = ? AND day = ?'),
+
+    // ---- trackers (universal user-defined tracking) ----
+    insertTracker: db.prepare(`
+      INSERT INTO trackers (user_id, name, type, unit, icon, color, category, options,
+        goal_value, goal_direction, scale_min, scale_max, xp, reminder_time, sort, created_at)
+      VALUES (@user_id, @name, @type, @unit, @icon, @color, @category, @options,
+        @goal_value, @goal_direction, @scale_min, @scale_max, @xp, @reminder_time, @sort, @now)
+      RETURNING *
+    `),
+    updateTracker: db.prepare(`
+      UPDATE trackers SET name=@name, type=@type, unit=@unit, icon=@icon, color=@color,
+        category=@category, options=@options, goal_value=@goal_value, goal_direction=@goal_direction,
+        scale_min=@scale_min, scale_max=@scale_max, xp=@xp, reminder_time=@reminder_time,
+        sort=@sort, archived=@archived
+      WHERE id=@id AND user_id=@user_id RETURNING *
+    `),
+    getTracker: db.prepare('SELECT * FROM trackers WHERE id = ? AND user_id = ?'),
+    listTrackers: db.prepare(
+      'SELECT * FROM trackers WHERE user_id = ? AND archived = 0 ORDER BY sort, id'),
+    listAllTrackers: db.prepare(
+      'SELECT * FROM trackers WHERE user_id = ? ORDER BY archived, sort, id'),
+    deleteTracker: db.prepare('DELETE FROM trackers WHERE id = ? AND user_id = ?'),
+    countTrackers: db.prepare('SELECT COUNT(*) n FROM trackers WHERE user_id = ?'),
+    reorderTracker: db.prepare('UPDATE trackers SET sort = ? WHERE id = ? AND user_id = ?'),
+
+    insertEntry: db.prepare(`
+      INSERT INTO tracker_entries (tracker_id, value, text_value, day, note, created_at)
+      VALUES (@tracker_id, @value, @text_value, @day, @note, @now)
+      RETURNING *
+    `),
+    listEntries: db.prepare(
+      'SELECT * FROM tracker_entries WHERE tracker_id = ? AND day >= ? ORDER BY day ASC, id ASC'),
+    listAllEntries: db.prepare(
+      'SELECT * FROM tracker_entries WHERE tracker_id = ? ORDER BY day ASC, id ASC'),
+    latestEntry: db.prepare(
+      'SELECT * FROM tracker_entries WHERE tracker_id = ? ORDER BY day DESC, id DESC LIMIT 1'),
+    deleteEntry: db.prepare(`
+      DELETE FROM tracker_entries WHERE id = ? AND tracker_id IN
+        (SELECT id FROM trackers WHERE user_id = ?)`),
+    countEntries: db.prepare(`
+      SELECT COUNT(*) n FROM tracker_entries e
+      JOIN trackers t ON t.id = e.tracker_id WHERE t.user_id = ?`),
+
+    // ---- user-editable option lists (activity types, workout categories) ----
+    listOptions: db.prepare(
+      'SELECT * FROM user_options WHERE user_id = ? AND domain = ? ORDER BY sort, id'),
+    insertOption: db.prepare(`
+      INSERT INTO user_options (user_id, domain, label, icon, color, sort)
+      VALUES (@user_id, @domain, @label, @icon, @color, @sort) RETURNING *`),
+    deleteOption: db.prepare('DELETE FROM user_options WHERE id = ? AND user_id = ?'),
+
+    // ---- personal records ----
+    getPR: db.prepare('SELECT * FROM personal_records WHERE user_id = ? AND exercise = ?'),
+    upsertPR: db.prepare(`
+      INSERT INTO personal_records (user_id, exercise, weight, reps, est_1rm, day, created_at)
+      VALUES (@user_id, @exercise, @weight, @reps, @est_1rm, @day, @now)
+      ON CONFLICT(user_id, exercise) DO UPDATE SET
+        weight=excluded.weight, reps=excluded.reps, est_1rm=excluded.est_1rm,
+        day=excluded.day, created_at=excluded.created_at
+      RETURNING *`),
+    listPRs: db.prepare(
+      'SELECT * FROM personal_records WHERE user_id = ? ORDER BY est_1rm DESC'),
   };
 
   return stmt;

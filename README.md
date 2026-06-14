@@ -34,13 +34,16 @@ Eine multitenant Fitness- & Körper-Tracking-PWA mit Google-Login, Charts, Gamif
 ## ✨ Features
 
 - **🔐 Google-Login (multitenant)** — jeder Account ein isolierter Mandant, eigene Daten, eigene Streaks.
-- **📊 Flexibles Tracking** — generisches Metrik-Modell für beliebige Körperwerte:
-  - **Körper:** Gewicht, Körperfett, Taille, Brust, Hüfte, Arm, Oberschenkel, Hals (+ eigene)
-  - **Anwesenheit:** täglicher Check-in (Gym / Sport / Home / aktive Pause) mit 17-Wochen-Heatmap
-  - **Training:** Workouts mit Kategorie, Dauer und einzelnen Sätzen (Übung · kg · Wdh.)
-  - **Ernährung:** Kalorien & Makros **oder** einfache Tagesbewertung + Wasser
-- **🎮 Volle Gamification** — XP pro Aktivität, Level-Kurve, Tages-**Streaks** mit Bonus, **11 freischaltbare Erfolge**.
-- **📈 Charts** — Gewichts-/Maß-Verläufe, Kalorien-Balken, Streak-Ring, Level-Fortschritt (Recharts).
+- **🧩 Universelles Tracker-System — alles frei nach eigenem Gusto** — der Nutzer definiert selbst, *was* und *wie* er trackt:
+  - **6 Eingabetypen:** Zahl (freie Einheit), Skala (z. B. 1–5), Ja/Nein-Gewohnheit, Dauer, Auswahl (eigene Optionen), Notiz/Freitext
+  - **Frei konfigurierbar:** Name, Symbol, Farbe, Kategorie, **Ziel + Richtung** (erhöhen/senken/halten), XP pro Eintrag
+  - **Vorlagen-Galerie** (Gewicht, Schlaf, Wasser, Stimmung, Schritte …) für 1-Tap-Anlage – alles bleibt editierbar
+  - **Editierbare Picker:** eigene Check-in-Aktivitäten & Workout-Kategorien; **Übungs-Bibliothek** mit Autocomplete
+- **🎯 Ziele & Bestleistungen** — Ziel-Fortschritt pro Tracker; **automatische Personal-Records** (Epley-1RM) im Training mit Glückwunsch.
+- **📈 Flexible Charts & Insights** — Zeitraum-Wahl (7T/30T/90T/1J/alles), gleitender Durchschnitt, **Korrelations-Analyse** zweier Tracker (Pearson-r + Scatter, z. B. Schlaf vs. Stimmung).
+- **📅 Anwesenheit & Training** — täglicher Check-in mit 17-Wochen-Heatmap; Workouts mit Kategorie, Dauer und Sätzen (Übung · kg · Wdh.).
+- **🥗 Ernährung** — Kalorien & Makros **oder** einfache Tagesbewertung + Wasser.
+- **🎮 Volle Gamification** — XP pro Aktivität (pro Tracker einstellbar), Level-Kurve, Tages-**Streaks** mit Bonus, **11 freischaltbare Erfolge**.
 - **📧 Motivations-E-Mails** — wöchentlicher Report, Streak-in-Gefahr-Alert, täglicher Nudge. Double-Opt-in + 1-Klick-Abmeldung, geplant via `node-cron`.
 - **🎨 Material 3 Expressive** — tonal surfaces, 10-stufige Shape-Scale, Spring-Motion, emphasized Typography (Roboto Flex), Electric-Lime-Akzent auf tiefem Neutral.
 - **📱 PWA** — installierbar, offline-Shell, Service Worker mit versioniertem Cache.
@@ -61,12 +64,30 @@ Eine multitenant Fitness- & Körper-Tracking-PWA mit Google-Login, Charts, Gamif
 
 - **Sessions:** HMAC-SHA256-signierte Cookies (kein JWT-Lib), `secure` nur über HTTPS.
 - **OAuth:** Authorization-Code-Flow ohne SDK; ID-Token-Verifikation via Google `tokeninfo`.
-- **Gamification:** server-autoritativ — append-only XP-Ledger + denormalisiertes Rollup auf dem User.
+- **Tracker-System:** voll generisch — ein `trackers`-Eintrag definiert Typ/Einheit/Ziel/XP, `tracker_entries` hält die Werte. Neue Metrik = neuer Datensatz, **keine** Schemaänderung. Logik in `server/trackers.js` (Seeding, Ziel-Fortschritt, 1RM, Korrelation, gleitender Durchschnitt).
+- **Gamification:** server-autoritativ — append-only XP-Ledger + denormalisiertes Rollup auf dem User; jeder Tracker-Eintrag vergibt seine konfigurierbare XP.
 - **Zeitzonen:** alle „Tage" als `YYYY-MM-DD` in der User-Zeitzone, damit Streaks zur Wanduhr passen.
 
 ### Datenmodell (Auszug)
 
-`users` · `metrics` (generische Zeitreihe) · `checkins` · `workouts` + `workout_sets` · `nutrition_logs` · `xp_events` · `user_achievements` · `email_prefs` · `email_log`
+`users` · **`trackers`** (frei definierte Tracker) + **`tracker_entries`** · **`user_options`** (editierbare Picker) · **`personal_records`** · `checkins` · `workouts` + `workout_sets` · `nutrition_logs` · `metrics` *(legacy, migriert in `trackers`)* · `xp_events` · `user_achievements` · `email_prefs` · `email_log`
+
+Migrationen sind append-only (`server/migrations.js`); `002_trackers` legt das Tracker-System an und überführt bestehende `metrics`-Werte verlustfrei in Tracker der Kategorie *body*.
+
+### API-Überblick (Auszug, alles unter `/api`)
+
+| Methode & Pfad | Zweck |
+|---|---|
+| `GET/POST /trackers`, `PUT/DELETE /trackers/:id` | Tracker verwalten (seedet Defaults bei leerem Konto) |
+| `POST /trackers/reorder` | Reihenfolge speichern |
+| `GET/POST /trackers/:id/entries`, `DELETE /entries/:id` | Einträge (vergeben Tracker-XP) |
+| `GET /trackers/:id/series?range=&avg=` | Zeitreihe + gleitender Durchschnitt + Ziel |
+| `GET /insights/correlation?a=&b=&range=` | Pearson-r + ausgerichtete Paare zweier Tracker |
+| `GET/POST /options/:domain`, `DELETE /options/:id` | editierbare Picker (`activity`, `workout_category`) |
+| `GET /records` · `GET /exercises` | Personal Records · Übungs-Bibliothek |
+| `GET /dashboard` · `GET /gamification` | Aggregate (Ziele, PRs, Level, Streak, Erfolge) |
+| `POST /checkins` · `POST /workouts` · `POST /nutrition` | spezialisiertes Tracking (Streak / Sätze+PR / Makros) |
+| `GET /auth/google` · `GET /auth/callback` · `GET /me` | OAuth & Session |
 
 ## 🚀 Lokale Entwicklung
 
@@ -90,8 +111,12 @@ npm run dev                   # http://localhost:5180  (proxyt /api -> :4252)
 ### Tests
 
 ```bash
-cd server && npm test         # node:test — Gamification, Level-Kurve, Streaks, Achievements
+cd server && npm test         # node:test — 26 Tests
 ```
+Abgedeckt: Gamification (Level-Kurve, Streaks, Achievements), Tracker-Logik (1RM, Ziel-Fortschritt,
+Korrelation/Pearson, gleitender Durchschnitt, Default-Seeding), DB-Flows (Einträge, PRs, Optionen,
+Cascade-Delete) und ein **API-Integrationstest**, der die App in-memory bootet und die Tracker-Endpunkte
+über HTTP mit Session-Cookie durchspielt.
 
 ## 📦 Build & Deploy
 

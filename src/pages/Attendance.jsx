@@ -9,13 +9,30 @@ export default function Attendance() {
   const toast = useToast();
   const [map, setMap] = useState({});       // day -> checkin
   const [busy, setBusy] = useState(false);
+  const [custom, setCustom] = useState([]); // user-defined activity types
 
   const from = addDays(today, -118);        // ~17 weeks for the heatmap
   const load = useCallback(async () => {
-    const { checkins } = await api.checkins(from);
+    const [{ checkins }, opt] = await Promise.all([
+      api.checkins(from), api.options('activity').catch(() => ({ options: [] })),
+    ]);
     setMap(Object.fromEntries(checkins.map((c) => [c.day, c])));
+    setCustom(opt.options || []);
   }, [from]);
   useEffect(() => { load(); }, [load]);
+
+  // Built-in + user-defined activity types (custom kind === label).
+  const kinds = [
+    ...CHECKIN_KINDS,
+    ...custom.map((o) => ({ kind: o.label, label: o.label, icon: o.icon || '⭐' })),
+  ];
+  const addActivity = async () => {
+    const label = prompt('Neue Aktivität (z. B. Schwimmen):');
+    if (!label || !label.trim()) return;
+    const icon = prompt('Symbol (Emoji, optional):') || '⭐';
+    await api.addOption('activity', { label: label.trim(), icon });
+    await load();
+  };
 
   const check = async (kind) => {
     setBusy(true);
@@ -43,7 +60,7 @@ export default function Attendance() {
         {todays ? (
           <div>
             <div className="title" style={{ marginBottom: 12 }}>
-              {CHECKIN_KINDS.find((k) => k.kind === todays.kind)?.icon} Heute eingecheckt
+              {(kinds.find((k) => k.kind === todays.kind)?.icon) || '✅'} Heute eingecheckt{todays.kind ? ` · ${kinds.find((k) => k.kind === todays.kind)?.label || todays.kind}` : ''}
             </div>
             <button className="btn outline" disabled={busy} onClick={uncheck}>Rückgängig</button>
           </div>
@@ -51,11 +68,14 @@ export default function Attendance() {
           <>
             <div className="body" style={{ marginBottom: 12 }}>Was hast du heute gemacht?</div>
             <div className="grid cols-2">
-              {CHECKIN_KINDS.map((k) => (
+              {kinds.map((k) => (
                 <button key={k.kind} className="btn tonal" disabled={busy} onClick={() => check(k.kind)} style={{ padding: '16px', justifyContent: 'flex-start', gap: 10 }}>
                   <span style={{ fontSize: '1.3rem' }}>{k.icon}</span> {k.label}
                 </button>
               ))}
+              <button className="btn outline" onClick={addActivity} style={{ padding: '16px', justifyContent: 'flex-start', gap: 10 }}>
+                <span style={{ fontSize: '1.3rem' }}>＋</span> Eigene
+              </button>
             </div>
           </>
         )}

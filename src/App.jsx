@@ -4,7 +4,9 @@ import { TopBar } from './components/TopBar.jsx';
 import { NavBar } from './components/NavBar.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
-import Body from './pages/Body.jsx';
+import Trackers from './pages/Trackers.jsx';
+import TrackerDetail from './pages/TrackerDetail.jsx';
+import Insights from './pages/Insights.jsx';
 import Training from './pages/Training.jsx';
 import Nutrition from './pages/Nutrition.jsx';
 import Attendance from './pages/Attendance.jsx';
@@ -36,7 +38,9 @@ export default function App() {
       <TopBar />
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/body" element={<Body />} />
+        <Route path="/trackers" element={<Trackers />} />
+        <Route path="/trackers/:id" element={<TrackerDetail />} />
+        <Route path="/insights" element={<Insights />} />
         <Route path="/training" element={<Training />} />
         <Route path="/nutrition" element={<Nutrition />} />
         <Route path="/attendance" element={<Attendance />} />

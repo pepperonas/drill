@@ -3,6 +3,7 @@
  */
 import { dayInTz, addDays } from './time.js';
 import { effectiveStreak, levelProgress } from './gamification.js';
+import { goalProgress } from './trackers.js';
 
 const NUDGES = [
   { subject: 'Heute zählt 💥', title: 'Ein Prozent besser', body: 'Du musst nicht alles geben – nur etwas. Ein kurzer Check-in hält die Maschine am Laufen.' },
@@ -63,6 +64,18 @@ export function dashboardSummary(db, user) {
     volume: db.sumVolume.get(user.id).v,
   };
 
+  // Active trackers that have a goal, with current progress (for the dashboard).
+  const goals = db.listTrackers.all(user.id)
+    .filter((t) => t.goal_value != null)
+    .map((t) => {
+      const latest = db.latestEntry.get(t.id);
+      return {
+        id: t.id, name: t.name, icon: t.icon, color: t.color, unit: t.unit,
+        goal: goalProgress(t, latest ? latest.value : null),
+      };
+    })
+    .filter((g) => g.goal);
+
   return {
     today,
     checkedInToday,
@@ -70,6 +83,8 @@ export function dashboardSummary(db, user) {
     streak: { current: streak, best: user.streak_best },
     week,
     totals,
+    goals,
+    records: db.listPRs.all(user.id).slice(0, 5),
     achievements: db.listAchievements.all(user.id),
   };
 }

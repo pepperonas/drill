@@ -52,6 +52,28 @@ export const api = {
   setEmailPrefs: (p) => req('PUT', '/email-prefs', p),
   setTz: (tz) => req('PUT', '/me', { tz }),
   deleteAccount: () => req('DELETE', '/me'),
+
+  // ---- flexible trackers ----
+  trackers: () => req('GET', '/trackers'),
+  allTrackers: () => req('GET', '/trackers/all'),
+  createTracker: (t) => req('POST', '/trackers', t),
+  updateTracker: (id, t) => req('PUT', `/trackers/${id}`, t),
+  deleteTracker: (id) => req('DELETE', `/trackers/${id}`),
+  reorderTrackers: (order) => req('POST', '/trackers/reorder', { order }),
+  trackerEntries: (id, from) => req('GET', `/trackers/${id}/entries` + (from ? `?from=${from}` : '')),
+  addEntry: (id, e) => req('POST', `/trackers/${id}/entries`, e),
+  delEntry: (id) => req('DELETE', `/entries/${id}`),
+  trackerSeries: (id, range = '90', avg = 7) => req('GET', `/trackers/${id}/series?range=${range}&avg=${avg}`),
+  correlation: (a, b, range = '90') => req('GET', `/insights/correlation?a=${a}&b=${b}&range=${range}`),
+
+  // ---- user-editable option lists ----
+  options: (domain) => req('GET', `/options/${domain}`),
+  addOption: (domain, o) => req('POST', `/options/${domain}`, o),
+  delOption: (id) => req('DELETE', `/options/${id}`),
+
+  // ---- records + exercise library ----
+  records: () => req('GET', '/records'),
+  exercises: () => req('GET', '/exercises'),
 };
 
 export function loginUrl() { return '/api/auth/google'; }

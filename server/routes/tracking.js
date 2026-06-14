@@ -9,6 +9,32 @@ import { dayInTz } from '../time.js';
 import {
   awardXp, recomputeStreak, checkAchievements, XP,
 } from '../gamification.js';
+import { est1RM } from '../trackers.js';
+
+/**
+ * Detect new personal records from a workout's sets. For each exercise we keep
+ * the best estimated 1RM; returns the list of exercises that just beat their PR.
+ */
+function detectPRs(db, user, sets, day) {
+  const best = new Map(); // exercise -> {weight,reps,e1rm}
+  for (const s of sets) {
+    if (!s.weight || !s.reps) continue;
+    const e1rm = est1RM(Number(s.weight), Number(s.reps));
+    if (e1rm <= 0) continue;
+    const cur = best.get(s.exercise);
+    if (!cur || e1rm > cur.e1rm) best.set(s.exercise, { weight: Number(s.weight), reps: Number(s.reps), e1rm });
+  }
+  const newPRs = [];
+  const now = Math.floor(Date.now() / 1000);
+  for (const [exercise, b] of best) {
+    const prev = db.getPR.get(user.id, exercise);
+    if (!prev || b.e1rm > prev.est_1rm) {
+      db.upsertPR.run({ user_id: user.id, exercise, weight: b.weight, reps: b.reps, est_1rm: b.e1rm, day, now });
+      newPRs.push({ exercise, weight: b.weight, reps: b.reps, est_1rm: b.e1rm, improved: !!prev });
+    }
+  }
+  return newPRs;
+}
 
 const KNOWN_METRICS = {
   weight: 'kg', bodyfat: '%', waist: 'cm', chest: 'cm', hip: 'cm',
@@ -119,8 +145,9 @@ export function trackingRoutes(db, auth) {
       reps: s.reps != null ? Number(s.reps) : null, sort: i,
     }));
     awardXp(db, req.user, XP.workout, 'workout', day);
+    const newPRs = detectPRs(db, req.user, sets, day);
     const newly = checkAchievements(db, req.user, gamiCtx(db, req.user), day);
-    res.json({ workout: { ...w, sets: db.listSets.all(w.id) }, gami: gamiResult(db, req.user, newly) });
+    res.json({ workout: { ...w, sets: db.listSets.all(w.id) }, gami: gamiResult(db, req.user, newly), prs: newPRs });
   });
 
   r.delete('/workouts/:id', (req, res) => {
