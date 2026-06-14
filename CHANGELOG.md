@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.1.3 — Achievement balancing & detail view (2026-06-14)
+
+- **Tappable achievement detail**: each badge opens a sheet explaining how to unlock
+  it ("So schaltest du es frei"), its XP bonus, and the unlock date when earned.
+- **Realism pass on achievements (now 29):**
+  - Removed the 365-day *consecutive* streak — unrealistic (one missed day resets it).
+    Streaks now top out at the attainable 100-day mark; the "one year" theme lives on
+    via the forgiving cumulative *365 check-ins* badge.
+  - Recalibrated volume thresholds (a single workout already moves ~5–12 t):
+    10/50/100 t → **25/100/500 t** so they're meaningful long-term goals.
+
 ## v1.1.1 — More achievements (2026-06-14)
 
 - Expanded achievements from 11 to **30**, including long-term milestones:

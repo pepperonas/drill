@@ -108,19 +108,18 @@ export const ACHIEVEMENTS = [
   // --- Streaks ---
   { code: 'streak_7',       name: 'Eine Woche',         desc: '7 Tage Streak',                    icon: '⚡', xp: 60 },
   { code: 'streak_14',      name: 'Zwei Wochen',        desc: '14 Tage Streak',                   icon: '🔋', xp: 120 },
-  { code: 'streak_30',      name: 'Eiserne Disziplin',  desc: '30 Tage Streak',                   icon: '🏆', xp: 250 },
-  { code: 'streak_60',      name: 'Durchmarsch',        desc: '60 Tage Streak',                   icon: '🛡️', xp: 500 },
-  { code: 'streak_100',     name: 'Unaufhaltsam',       desc: '100 Tage Streak',                  icon: '💎', xp: 1000 },
-  { code: 'streak_365',     name: 'Jahresserie',        desc: '365 Tage Streak',                  icon: '🗓️', xp: 5000 },
+  { code: 'streak_30',      name: 'Eiserne Disziplin',  desc: '30 Tage Streak',                   icon: '🏆', xp: 300 },
+  { code: 'streak_60',      name: 'Durchmarsch',        desc: '60 Tage Streak',                   icon: '🛡️', xp: 600 },
+  { code: 'streak_100',     name: 'Unaufhaltsam',       desc: '100 Tage Streak',                  icon: '💎', xp: 1500 },
   // --- Workouts ---
   { code: 'workouts_10',    name: 'Aufgewärmt',         desc: '10 Workouts protokolliert',        icon: '💪', xp: 80 },
   { code: 'workouts_50',    name: 'Stammgast',          desc: '50 Workouts protokolliert',        icon: '🦾', xp: 300 },
   { code: 'workouts_100',   name: 'Eisenfreund',        desc: '100 Workouts protokolliert',       icon: '🏋️', xp: 600 },
   { code: 'workouts_250',   name: 'Hantel-Veteran',     desc: '250 Workouts protokolliert',       icon: '🎖️', xp: 1500 },
-  // --- Volumen ---
-  { code: 'volume_10t',     name: 'Tonnenweise',        desc: '10 t Gesamtvolumen bewegt',        icon: '🏋️', xp: 150 },
-  { code: 'volume_50t',     name: 'Schwergewicht',      desc: '50 t Gesamtvolumen bewegt',        icon: '🐘', xp: 500 },
-  { code: 'volume_100t',    name: 'Kraftwerk',          desc: '100 t Gesamtvolumen bewegt',       icon: '⚙️', xp: 1200 },
+  // --- Volumen (ein Workout bewegt grob 5–12 t, daher höhere Schwellen) ---
+  { code: 'volume_25t',     name: 'Tonnenweise',        desc: '25 t Gesamtvolumen bewegt',        icon: '🏋️', xp: 150 },
+  { code: 'volume_100t',    name: 'Schwergewicht',      desc: '100 t Gesamtvolumen bewegt',       icon: '🐘', xp: 500 },
+  { code: 'volume_500t',    name: 'Kraftwerk',          desc: '500 t Gesamtvolumen bewegt',       icon: '⚙️', xp: 1500 },
   // --- Bestleistungen ---
   { code: 'first_pr',       name: 'Neuer Rekord',       desc: 'Erste Bestleistung aufgestellt',   icon: '🥇', xp: 50 },
   { code: 'prs_10',         name: 'Rekordjäger',        desc: '10 Bestleistungen aufgestellt',    icon: '🏅', xp: 250 },
@@ -169,16 +168,15 @@ export function checkAchievements(db, user, ctx, day) {
   if (user.streak_current >= 30) unlock('streak_30');
   if (user.streak_current >= 60) unlock('streak_60');
   if (user.streak_current >= 100) unlock('streak_100');
-  if (user.streak_current >= 365) unlock('streak_365');
   // workouts
   if (ctx.workouts >= 10) unlock('workouts_10');
   if (ctx.workouts >= 50) unlock('workouts_50');
   if (ctx.workouts >= 100) unlock('workouts_100');
   if (ctx.workouts >= 250) unlock('workouts_250');
   // volume
-  if (ctx.volume >= 10000) unlock('volume_10t');
-  if (ctx.volume >= 50000) unlock('volume_50t');
+  if (ctx.volume >= 25000) unlock('volume_25t');
   if (ctx.volume >= 100000) unlock('volume_100t');
+  if (ctx.volume >= 500000) unlock('volume_500t');
   // personal records
   if ((ctx.records || 0) >= 1) unlock('first_pr');
   if ((ctx.records || 0) >= 10) unlock('prs_10');

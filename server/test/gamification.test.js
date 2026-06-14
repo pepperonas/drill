@@ -81,11 +81,12 @@ test('long-term & PR/tracker achievements unlock at their thresholds', () => {
   const codes = new Set(newly.map((a) => a.code));
   // ctx- and streak-driven achievements (level achievements derive from real XP,
   // tested separately via awardXp leveling).
-  for (const c of ['checkins_50', 'streak_14', 'workouts_100', 'volume_50t', 'first_pr', 'prs_10',
+  for (const c of ['checkins_50', 'streak_14', 'workouts_100', 'volume_25t', 'first_pr', 'prs_10',
     'tracker_variety', 'entries_100', 'nutrition_30']) {
     assert.ok(codes.has(c), `expected ${c} to unlock`);
   }
-  // higher tiers not yet reached
+  // higher tiers not yet reached (50 t volume clears 25 t but not 100 t)
+  assert.ok(!codes.has('volume_100t'));
   assert.ok(!codes.has('checkins_365'));
   assert.ok(!codes.has('streak_30'));
 });

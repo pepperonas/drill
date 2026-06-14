@@ -43,7 +43,7 @@ Eine multitenant Fitness- & Körper-Tracking-PWA mit Google-Login, Charts, Gamif
 - **📈 Flexible Charts & Insights** — Zeitraum-Wahl (7T/30T/90T/1J/alles), gleitender Durchschnitt, **Korrelations-Analyse** zweier Tracker (Pearson-r + Scatter, z. B. Schlaf vs. Stimmung).
 - **📅 Anwesenheit & Training** — täglicher Check-in mit 17-Wochen-Heatmap; Workouts mit Kategorie, Dauer und Sätzen (Übung · kg · Wdh.).
 - **🥗 Ernährung** — Kalorien & Makros **oder** einfache Tagesbewertung + Wasser.
-- **🎮 Volle Gamification** — XP pro Aktivität (pro Tracker einstellbar), Level-Kurve, Tages-**Streaks** mit Bonus, **30 freischaltbare Erfolge** inkl. Langzeit-Meilensteinen (bis 365-Tage-Serie & Level 50).
+- **🎮 Volle Gamification** — XP pro Aktivität (pro Tracker einstellbar), Level-Kurve, Tages-**Streaks** mit Bonus, **29 freischaltbare Erfolge** inkl. erreichbarer Langzeit-Meilensteine (100-Tage-Serie, 365 Check-ins gesamt, Level 50, 500 t Volumen).
 - **📧 Motivations-E-Mails** — wöchentlicher Report, Streak-in-Gefahr-Alert, täglicher Nudge. Double-Opt-in + 1-Klick-Abmeldung, geplant via `node-cron`.
 - **🎨 Material 3 Expressive** — tonal surfaces, 10-stufige Shape-Scale, Spring-Motion, emphasized Typography (Roboto Flex), Electric-Lime-Akzent auf tiefem Neutral.
 - **📱 PWA** — installierbar, offline-Shell, Service Worker mit versioniertem Cache.
@@ -148,12 +148,14 @@ Siehe [`server/.env.example`](server/.env.example) für die vollständige Liste.
 | Ernährung/Tag | 15 |
 | Körpermetrik | 10 |
 
-**30 Erfolge** über alle Bereiche, inkl. Langzeit-Meilensteinen:
+**29 Erfolge** über alle Bereiche. Serien-Erfolge enden bei der erreichbaren 100-Tage-Marke
+(ein verpasster Tag setzt eine Serie zurück); echte Langzeitziele laufen über *kumulative*
+Zähler, die Pausen verzeihen:
 
-- **Streaks:** Eine Woche (7) · Zwei Wochen (14) · Eiserne Disziplin (30) · Durchmarsch (60) · Unaufhaltsam (100) · **Jahresserie (365)**
-- **Check-ins:** Erster Schritt (1) · Halbes Hundert (50) · Hundertmal dabei (100) · Dauergast (250) · **Ein ganzes Jahr (365)**
-- **Workouts:** Aufgewärmt (10) · Stammgast (50) · Eisenfreund (100) · **Hantel-Veteran (250)**
-- **Volumen:** Tonnenweise (10 t) · Schwergewicht (50 t) · **Kraftwerk (100 t)**
+- **Streaks (am Stück):** Eine Woche (7) · Zwei Wochen (14) · Eiserne Disziplin (30) · Durchmarsch (60) · **Unaufhaltsam (100)**
+- **Check-ins (gesamt):** Erster Schritt (1) · Halbes Hundert (50) · Hundertmal dabei (100) · Dauergast (250) · **Ein ganzes Jahr (365)**
+- **Workouts (gesamt):** Aufgewärmt (10) · Stammgast (50) · Eisenfreund (100) · **Hantel-Veteran (250)**
+- **Volumen (gesamt):** Tonnenweise (25 t) · Schwergewicht (100 t) · **Kraftwerk (500 t)**
 - **Bestleistungen:** Neuer Rekord (1) · Rekordjäger (10 PRs)
 - **Level:** 5 · 10 · 20 · **50 (👑)**
 - **Daten:** Vermessen (1 Eintrag) · Vielseitig (8 Tracker) · Datensammler (100 Einträge) · **Quantified Self (500)**
