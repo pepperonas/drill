@@ -1,0 +1,137 @@
+/* ============================================================================
+   Material 3 Expressive — design tokens for drill
+   ----------------------------------------------------------------------------
+   Expressive principles applied here:
+   - Vibrant, high-chroma accent (electric lime) on a deep neutral surface
+   - 10-step shape scale (0 -> full) with generous default radii
+   - Spring-based motion (spatial vs effects), not linear easing
+   - Emphasized typography via Roboto Flex variable weights
+   - Tonal surface containers (lowest -> highest) for layered depth
+   Dark is the default brand look; light is provided for prefers-color-scheme.
+============================================================================ */
+
+:root {
+  /* ---- Brand seed: electric lime + warm coral tertiary ---- */
+  --lime-90: #e8ffb0;
+  --lime-70: #c6ff00;
+  --lime-60: #aee000;
+  --lime-40: #6f8f00;
+
+  /* ---- Color roles (DARK — default) ---- */
+  --primary:            #c6ff00;
+  --on-primary:         #1c2400;
+  --primary-container:  #4a5c00;
+  --on-primary-container:#e8ffb0;
+
+  --secondary:          #8fd6ff;
+  --on-secondary:       #003549;
+  --secondary-container:#0e4d68;
+  --on-secondary-container:#c7ecff;
+
+  --tertiary:           #ffb59c;
+  --on-tertiary:        #5a1c0a;
+  --tertiary-container: #7a3320;
+  --on-tertiary-container:#ffdbcf;
+
+  --error:              #ffb4ab;
+  --on-error:           #690005;
+  --error-container:    #93000a;
+  --on-error-container: #ffdad6;
+
+  --background:         #14160f;
+  --on-background:      #e6e9dd;
+  --surface:            #14160f;
+  --on-surface:         #e6e9dd;
+  --on-surface-variant: #c5c8b8;
+  --outline:            #8f9285;
+  --outline-variant:    #44483c;
+
+  /* tonal surface containers for layered depth */
+  --surface-dim:        #14160f;
+  --surface-bright:     #3a3d33;
+  --surface-container-lowest: #0e1009;
+  --surface-container-low:  #1c1f16;
+  --surface-container:  #20241a;
+  --surface-container-high: #2b2e24;
+  --surface-container-highest:#363a2e;
+
+  --inverse-surface:    #e6e9dd;
+  --inverse-on-surface: #2d3027;
+  --scrim:              rgba(0,0,0,.6);
+
+  /* charts palette (expressive, distinct) */
+  --chart-1: #c6ff00;
+  --chart-2: #8fd6ff;
+  --chart-3: #ffb59c;
+  --chart-4: #d0bcff;
+  --chart-5: #ffd34d;
+
+  /* ---- Shape scale (10 steps, expressive) ---- */
+  --shape-none: 0px;
+  --shape-xs:   6px;
+  --shape-sm:   10px;
+  --shape-md:   16px;
+  --shape-lg:   22px;
+  --shape-xl:   30px;
+  --shape-2xl:  40px;
+  --shape-full: 999px;
+
+  /* ---- Motion: spring-flavoured easing + durations ---- */
+  --ease-spatial:  cubic-bezier(.2, .8, .2, 1.05);   /* overshoot for spatial moves */
+  --ease-effects:  cubic-bezier(.3, 0, 0, 1);        /* color/opacity, no overshoot */
+  --ease-emphasized: cubic-bezier(.2, 0, 0, 1);
+  --dur-short:  140ms;
+  --dur-medium: 260ms;
+  --dur-long:   420ms;
+
+  /* ---- Elevation (soft, layered shadows) ---- */
+  --elev-1: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px 1px rgba(0,0,0,.25);
+  --elev-2: 0 1px 2px rgba(0,0,0,.4), 0 2px 6px 2px rgba(0,0,0,.25);
+  --elev-3: 0 4px 8px 3px rgba(0,0,0,.25), 0 1px 3px rgba(0,0,0,.4);
+
+  /* ---- Typography ---- */
+  --font: 'Roboto Flex', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  color-scheme: dark;
+}
+
+/* Light theme for users who prefer it */
+@media (prefers-color-scheme: light) {
+  :root[data-theme="auto"] {
+    --primary:            #4a5c00;
+    --on-primary:         #ffffff;
+    --primary-container:  #c6ff00;
+    --on-primary-container:#161e00;
+
+    --secondary:          #1b5273;
+    --on-secondary:       #ffffff;
+    --secondary-container:#c7ecff;
+    --on-secondary-container:#001e2c;
+
+    --tertiary:           #984729;
+    --on-tertiary:        #ffffff;
+    --tertiary-container: #ffdbcf;
+    --on-tertiary-container:#3a0c00;
+
+    --background:         #fcfaf0;
+    --on-background:      #1b1c16;
+    --surface:            #fcfaf0;
+    --on-surface:         #1b1c16;
+    --on-surface-variant: #45483b;
+    --outline:            #767a69;
+    --outline-variant:    #c6c9b6;
+
+    --surface-dim:        #dcdccf;
+    --surface-bright:     #fcfaf0;
+    --surface-container-lowest:#ffffff;
+    --surface-container-low:  #f6f4e8;
+    --surface-container:  #f0eee2;
+    --surface-container-high: #eae8dd;
+    --surface-container-highest:#e4e3d7;
+
+    --inverse-surface:    #303128;
+    --inverse-on-surface: #f2f1e4;
+
+    color-scheme: light;
+  }
+}

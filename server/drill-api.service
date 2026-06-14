@@ -1,0 +1,22 @@
+[Unit]
+Description=drill.celox.io API (fitness/body tracking, gamification, motivational emails)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/drill-api
+EnvironmentFile=/opt/drill-api/.env
+ExecStart=/usr/bin/node index.js
+Restart=on-failure
+RestartSec=3
+User=www-data
+Group=www-data
+# data dir must be writable by www-data
+ReadWritePaths=/opt/drill-api/data
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,24 @@
+{
+  "name": "drill-api",
+  "version": "1.0.0",
+  "description": "Backend for drill.celox.io: Google OAuth + per-user fitness/body tracking, gamification and motivational emails",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "node --test",
+    "backup": "node scripts/backup.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "cookie-parser": "^1.4.6",
+    "express": "^4.21.1",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.16"
+  }
+}

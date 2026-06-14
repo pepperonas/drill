@@ -1,0 +1,15 @@
+{
+  "name": "drill — train. track. transform.",
+  "short_name": "drill",
+  "description": "Tracke Training, Körper & Ernährung. Mit Charts, Streaks und Gamification dranbleiben.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#14160f",
+  "theme_color": "#14160f",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
