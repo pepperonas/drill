@@ -8,7 +8,7 @@
  */
 import express from 'express';
 import { dayInTz, addDays } from '../time.js';
-import { awardXp, checkAchievements } from '../gamification.js';
+import { awardXp, checkAchievements, reverseXpByRef } from '../gamification.js';
 import {
   TRACKER_TYPES, GOAL_DIRECTIONS, seedDefaultsIfEmpty, goalProgress,
   alignSeries, pearson, movingAverage,
@@ -143,7 +143,7 @@ export function trackerRoutes(db, auth) {
     }
     p.now = now();
     const entry = db.insertEntry.get(p);
-    awardXp(db, req.user, t.xp, 'tracker:' + t.name, p.day);
+    awardXp(db, req.user, t.xp, 'tracker:' + t.name, p.day, `entry:${entry.id}`);
     const newly = checkAchievements(db, req.user, gamiCtx(db, req.user), p.day);
     res.json({
       entry, tracker: decorate(db, db.getTracker.get(t.id, req.user.id)),
@@ -152,8 +152,10 @@ export function trackerRoutes(db, auth) {
   });
 
   r.delete('/entries/:id', (req, res) => {
-    db.deleteEntry.run(Number(req.params.id), req.user.id);
-    res.json({ ok: true });
+    const id = Number(req.params.id);
+    db.deleteEntry.run(id, req.user.id);
+    reverseXpByRef(db, req.user, `entry:${id}`);
+    res.json({ ok: true, gami: { xp: req.user.xp, level: req.user.level, streak: req.user.streak_current } });
   });
 
   // ---- series (with moving average + goal) ----

@@ -65,6 +65,12 @@ the session cookie's `secure` flag is auto-relaxed so http login works.
   (`xp_events`) plus a denormalized rollup on the `users` row. Every tracking write goes through
   `awardXp` + `checkAchievements` and returns a `gami` delta so the client can celebrate
   level-ups/badges immediately (`useToast().celebrate`).
+- **XP is reversible on undo.** Each `xp_events` row carries a source `ref`
+  (`checkin:<day>` / `workout:<id>` / `entry:<id>` / `nutrition:<day>` / `metric:<id>` /
+  `achievement:<code>`). Delete endpoints call `reverseXpByRef(db, user, ref)` to drop those events
+  and recompute the rollup; deleting a check-in also calls `recomputeStreakFromHistory`. Achievements
+  are NOT revoked on undo (earned = kept). `rebuildXp(db, user)` deterministically rebuilds the whole
+  ledger from current data (repair for drifted accounts); run it via `node scripts/rebuild-xp.js [id]`.
 - **Days are timezone-local strings** (`YYYY-MM-DD` in the user's tz, `server/time.js`) so streaks
   and "today" match the user's wall clock, not UTC. The client reports its tz to `/api/me` on load.
 - **Metrics are generic** (`metrics` table: kind/value/unit/day) — adding a new body measurement is a

@@ -99,10 +99,17 @@ export function openDb(path) {
 
     // gamification
     insertXp: db.prepare(`
-      INSERT INTO xp_events (user_id, amount, reason, day, created_at)
-      VALUES (@user_id, @amount, @reason, @day, @now)
+      INSERT INTO xp_events (user_id, amount, reason, day, created_at, ref)
+      VALUES (@user_id, @amount, @reason, @day, @now, @ref)
     `),
     sumXp: db.prepare('SELECT COALESCE(SUM(amount),0) xp FROM xp_events WHERE user_id = ?'),
+    delXpByRef: db.prepare('DELETE FROM xp_events WHERE user_id = ? AND ref = ?'),
+    delAllXp: db.prepare('DELETE FROM xp_events WHERE user_id = ?'),
+    allEntriesWithXp: db.prepare(`
+      SELECT e.id, e.day, t.xp FROM tracker_entries e
+      JOIN trackers t ON t.id = e.tracker_id WHERE t.user_id = ? ORDER BY e.created_at`),
+    bridgeDays: db.prepare(`
+      SELECT day FROM freeze_events WHERE user_id = ? AND type = 'apply' AND reason = 'auto_bridge'`),
     recentXp: db.prepare(
       'SELECT * FROM xp_events WHERE user_id = ? ORDER BY created_at DESC LIMIT ?'),
     updateUserGami: db.prepare(`

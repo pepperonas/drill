@@ -45,10 +45,10 @@ export function levelProgress(xp) {
  * Award XP and recompute the rollup. `reason` is free text for the ledger.
  * Returns { xp, level, leveledUp, from, to }.
  */
-export function awardXp(db, user, amount, reason, day) {
+export function awardXp(db, user, amount, reason, day, ref = null) {
   if (amount <= 0) return { leveledUp: false, level: user.level };
   const now = Math.floor(Date.now() / 1000);
-  db.insertXp.run({ user_id: user.id, amount, reason, day, now });
+  db.insertXp.run({ user_id: user.id, amount, reason, day, now, ref });
   const xp = db.sumXp.get(user.id).xp;
   const fromLevel = user.level;
   const level = levelForXp(xp);
@@ -60,6 +60,105 @@ export function awardXp(db, user, amount, reason, day) {
   });
   user.xp = xp; user.level = level;
   return { xp, level, leveledUp: level > fromLevel, from: fromLevel, to: level };
+}
+
+/**
+ * Reverse all XP awarded under a given source `ref` (e.g. when the user undoes
+ * an action) and recompute the xp/level rollup. Streak fields are untouched here
+ * — callers that delete a check-in also call recomputeStreakFromHistory.
+ */
+export function reverseXpByRef(db, user, ref) {
+  db.delXpByRef.run(user.id, ref);
+  const xp = db.sumXp.get(user.id).xp;
+  const level = levelForXp(xp);
+  db.updateUserGami.run({
+    id: user.id, xp, level,
+    streak_current: user.streak_current, streak_best: user.streak_best,
+    last_checkin_day: user.last_checkin_day,
+  });
+  user.xp = xp; user.level = level;
+  return { xp, level };
+}
+
+/**
+ * Recompute streak_current / last_checkin_day from the actual surviving history
+ * (check-ins plus auto-bridged freeze days). Used after a check-in is deleted so
+ * the streak reflects reality. streak_best is never lowered.
+ */
+export function recomputeStreakFromHistory(db, user) {
+  const present = new Set(db.listCheckins.all(user.id, '0000-00-00').map(c => c.day));
+  for (const r of db.bridgeDays.all(user.id)) present.add(r.day);
+  let streak = 0, last = null;
+  if (present.size > 0) {
+    last = [...present].sort().pop();
+    streak = 1;
+    let d = last;
+    while (present.has(addDays(d, -1))) { streak++; d = addDays(d, -1); }
+  }
+  const best = Math.max(user.streak_best, streak);
+  db.updateUserGami.run({
+    id: user.id, xp: user.xp, level: user.level,
+    streak_current: streak, streak_best: best, last_checkin_day: last,
+  });
+  user.streak_current = streak; user.streak_best = best; user.last_checkin_day = last;
+  return { streak, best, last };
+}
+
+/**
+ * Deterministically rebuild a user's entire XP ledger from current data — a
+ * self-healing repair for accounts whose ledger drifted (e.g. legacy deletes
+ * that didn't reverse XP). Re-derives streak too. Achievements stay earned: each
+ * currently-unlocked achievement keeps its bonus.
+ */
+export function rebuildXp(db, user) {
+  db.delAllXp.run(user.id);
+  user.xp = 0; user.level = 1;
+
+  // check-ins (date order) -> base + streak bonus, with freeze-bridged continuity
+  const present = new Set(db.bridgeDays.all(user.id).map(r => r.day));
+  const checkins = db.listCheckins.all(user.id, '0000-00-00');
+  for (const c of checkins) present.add(c.day);
+  let run = 0, prev = null;
+  for (const c of checkins) {
+    if (prev && c.day > prev) {
+      let contiguous = true;
+      for (let d = addDays(prev, 1); d < c.day; d = addDays(d, 1)) {
+        if (!present.has(d)) { contiguous = false; break; }
+      }
+      run = contiguous ? run + diffDays(prev, c.day) : 1;
+    } else {
+      run = 1;
+    }
+    awardXp(db, user, XP.checkin, 'checkin', c.day, `checkin:${c.day}`);
+    const bonus = Math.min(run * XP.streak_bonus, 50);
+    if (bonus > 0) awardXp(db, user, bonus, 'streak_bonus', c.day, `checkin:${c.day}`);
+    prev = c.day;
+  }
+
+  // workouts
+  for (const w of db.listWorkouts.all(user.id, 100000)) {
+    awardXp(db, user, XP.workout, 'workout', w.day, `workout:${w.id}`);
+  }
+  // tracker entries (each contributes its tracker's current xp)
+  for (const e of db.allEntriesWithXp.all(user.id)) {
+    awardXp(db, user, e.xp, 'tracker', e.day, `entry:${e.id}`);
+  }
+  // nutrition days
+  for (const n of db.listNutrition.all(user.id, '0000-00-00')) {
+    awardXp(db, user, XP.nutrition, 'nutrition', n.day, `nutrition:${n.day}`);
+  }
+  // achievements stay earned -> re-award their bonus
+  const byCode = Object.fromEntries(ACHIEVEMENTS.map(a => [a.code, a]));
+  for (const a of db.listAchievements.all(user.id)) {
+    const def = byCode[a.code];
+    if (def && def.xp > 0) {
+      const day = a.unlocked_at ? new Date(a.unlocked_at * 1000).toISOString().slice(0, 10) : '1970-01-01';
+      awardXp(db, user, def.xp, 'achievement:' + a.code, day, `achievement:${a.code}`);
+    }
+  }
+
+  recomputeStreakFromHistory(db, user);
+  return { xp: user.xp, level: user.level, streak: user.streak_current };
 }
 
 /**
@@ -169,7 +268,7 @@ export function checkAchievements(db, user, ctx, day) {
     const a = BY_CODE[code];
     if (!a) return;
     db.insertAchievement.run(user.id, code, Math.floor(Date.now() / 1000));
-    if (a.xp > 0) awardXp(db, user, a.xp, 'achievement:' + code, day);
+    if (a.xp > 0) awardXp(db, user, a.xp, 'achievement:' + code, day, `achievement:${code}`);
     newly.push(a);
   };
 

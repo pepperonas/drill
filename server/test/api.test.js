@@ -114,6 +114,24 @@ test('streak-freeze config is readable and updatable', async () => {
   assert.equal(upd.config.max_freezes, 5);
 });
 
+test('undoing a check-in reverses its XP and recomputes the streak', async () => {
+  const user = db.upsertUser.get({ google_sub: 'undo-user', email: 'u@b.c', name: 'U', picture: null, now: 1700000000 });
+  const ck = 'drill_session=' + sign({ uid: user.id, exp: 9999999999 }, process.env.SESSION_SECRET);
+  const post = (day) => fetch(base + '/api/checkins', {
+    method: 'POST', headers: { cookie: ck, 'content-type': 'application/json' },
+    body: JSON.stringify({ day, kind: 'gym' }),
+  }).then((r) => r.json());
+  const xp = async () => (await (await fetch(base + '/api/dashboard', { headers: { cookie: ck } })).json()).level.xp;
+
+  await post('2026-07-01');                       // 25 + 5 bonus + 20 first_checkin = 50
+  assert.equal(await xp(), 50);
+  await post('2026-07-02');                       // + 25 + 10 bonus = 85
+  assert.equal(await xp(), 85);
+
+  await fetch(base + '/api/checkins/2026-07-02', { method: 'DELETE', headers: { cookie: ck } });
+  assert.equal(await xp(), 50);                   // the second check-in's XP is gone again
+});
+
 test('a missed day is auto-bridged by a freeze on the next check-in', async () => {
   // fresh user so streak state is clean
   const user = db.upsertUser.get({ google_sub: 'freeze-user', email: 'f@b.c', name: 'F', picture: null, now: 1700000000 });

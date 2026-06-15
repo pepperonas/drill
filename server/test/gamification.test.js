@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { openDb } from '../db.js';
 import {
   xpForLevel, levelForXp, levelProgress, awardXp, recomputeStreak,
-  effectiveStreak, checkAchievements,
+  effectiveStreak, checkAchievements, reverseXpByRef, rebuildXp,
 } from '../gamification.js';
 
 function freshUser(db) {
@@ -89,6 +89,37 @@ test('long-term & PR/tracker achievements unlock at their thresholds', () => {
   assert.ok(!codes.has('volume_100t'));
   assert.ok(!codes.has('checkins_365'));
   assert.ok(!codes.has('streak_30'));
+});
+
+test('reverseXpByRef removes an action\'s XP and recomputes the rollup', () => {
+  const db = openDb(':memory:');
+  const u = freshUser(db);
+  awardXp(db, u, 25, 'checkin', '2026-01-01', 'checkin:2026-01-01');
+  awardXp(db, u, 5, 'streak_bonus', '2026-01-01', 'checkin:2026-01-01');
+  awardXp(db, u, 40, 'workout', '2026-01-01', 'workout:1');
+  assert.equal(u.xp, 70);
+  reverseXpByRef(db, u, 'checkin:2026-01-01');  // undo the check-in (base + bonus)
+  assert.equal(u.xp, 40);                       // only the workout remains
+  assert.equal(u.level, levelForXp(40));
+});
+
+test('rebuildXp self-heals an inflated ledger to ground truth', () => {
+  const db = openDb(':memory:');
+  const u = freshUser(db);
+  const now = 1700000000;
+  // ground truth: one check-in on 06-14 and the first_checkin achievement
+  db.upsertCheckin.get({ user_id: u.id, day: '2026-06-14', kind: 'gym', note: null, now });
+  db.insertAchievement.run(u.id, 'first_checkin', now); // bonus 20
+  // simulate drift: orphan XP from undone check-ins still in the ledger
+  db.insertXp.run({ user_id: u.id, amount: 70, reason: 'orphan', day: '2026-06-15', now, ref: null });
+  db.updateUserGami.run({ id: u.id, xp: 120, level: 2, streak_current: 2, streak_best: 2, last_checkin_day: '2026-06-15' });
+
+  const r = rebuildXp(db, u);
+  // 25 (checkin) + 5 (streak bonus, streak 1) + 20 (first_checkin) = 50
+  assert.equal(r.xp, 50);
+  assert.equal(r.level, 1);
+  assert.equal(u.streak_current, 1);
+  assert.equal(u.last_checkin_day, '2026-06-14');
 });
 
 test('progress percentage stays within 0..100', () => {

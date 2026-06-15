@@ -8,6 +8,7 @@ import express from 'express';
 import { dayInTz } from '../time.js';
 import {
   awardXp, recomputeStreak, checkAchievements, XP,
+  reverseXpByRef, recomputeStreakFromHistory,
 } from '../gamification.js';
 import { est1RM } from '../trackers.js';
 import { ensureFreeze, reconcileEarn } from '../streakfreeze.js';
@@ -85,14 +86,16 @@ export function trackingRoutes(db, auth) {
     const unit = req.body.unit || KNOWN_METRICS[slug] || '';
     const d = day || dayInTz(req.user.tz);
     const m = db.insertMetric.get({ user_id: req.user.id, kind: slug, value: v, unit, day: d, note: note || null, now: now() });
-    awardXp(db, req.user, XP.metric, 'metric:' + slug, d);
+    awardXp(db, req.user, XP.metric, 'metric:' + slug, d, `metric:${m.id}`);
     const newly = checkAchievements(db, req.user, gamiCtx(db, req.user), d);
     res.json({ metric: m, gami: gamiResult(db, req.user, newly) });
   });
 
   r.delete('/metrics/:id', (req, res) => {
-    db.deleteMetric.run(Number(req.params.id), req.user.id);
-    res.json({ ok: true });
+    const id = Number(req.params.id);
+    db.deleteMetric.run(id, req.user.id);
+    reverseXpByRef(db, req.user, `metric:${id}`);
+    res.json({ ok: true, gami: gamiResult(db, req.user, []) });
   });
 
   // ---- check-ins (attendance) ----
@@ -112,10 +115,10 @@ export function trackingRoutes(db, auth) {
       const cfg = ensureFreeze(db, req.user);
       const sres = recomputeStreak(db, req.user, day, cfg);
       frozen = sres.frozen;
-      leveled = awardXp(db, req.user, XP.checkin, 'checkin', day);
-      // streak bonus, capped
+      leveled = awardXp(db, req.user, XP.checkin, 'checkin', day, `checkin:${day}`);
+      // streak bonus, capped — tagged with the same ref so undo reverses both
       const bonus = Math.min(req.user.streak_current * XP.streak_bonus, 50);
-      if (bonus > 0) awardXp(db, req.user, bonus, 'streak_bonus', day);
+      if (bonus > 0) awardXp(db, req.user, bonus, 'streak_bonus', day, `checkin:${day}`);
       // earn freezes from check-in / streak / level milestones
       reconcileEarn(db, req.user, cfg, day, db.countCheckins.get(req.user.id).n);
     }
@@ -124,8 +127,11 @@ export function trackingRoutes(db, auth) {
   });
 
   r.delete('/checkins/:day', (req, res) => {
-    db.deleteCheckin.run(req.user.id, String(req.params.day));
-    res.json({ ok: true });
+    const day = String(req.params.day);
+    db.deleteCheckin.run(req.user.id, day);
+    reverseXpByRef(db, req.user, `checkin:${day}`);   // remove its XP + streak bonus
+    recomputeStreakFromHistory(db, req.user);          // streak now reflects reality
+    res.json({ ok: true, gami: gamiResult(db, req.user, []) });
   });
 
   // ---- workouts ----
@@ -152,15 +158,17 @@ export function trackingRoutes(db, auth) {
       weight: s.weight != null ? Number(s.weight) : null,
       reps: s.reps != null ? Number(s.reps) : null, sort: i,
     }));
-    awardXp(db, req.user, XP.workout, 'workout', day);
+    awardXp(db, req.user, XP.workout, 'workout', day, `workout:${w.id}`);
     const newPRs = detectPRs(db, req.user, sets, day);
     const newly = checkAchievements(db, req.user, gamiCtx(db, req.user), day);
     res.json({ workout: { ...w, sets: db.listSets.all(w.id) }, gami: gamiResult(db, req.user, newly), prs: newPRs });
   });
 
   r.delete('/workouts/:id', (req, res) => {
-    db.deleteWorkout.run(Number(req.params.id), req.user.id);
-    res.json({ ok: true });
+    const id = Number(req.params.id);
+    db.deleteWorkout.run(id, req.user.id);
+    reverseXpByRef(db, req.user, `workout:${id}`);
+    res.json({ ok: true, gami: gamiResult(db, req.user, []) });
   });
 
   // ---- nutrition ----
@@ -180,7 +188,7 @@ export function trackingRoutes(db, auth) {
       fat_g: num(b.fat_g), quality: num(b.quality), water_ml: num(b.water_ml),
       note: b.note || null, now: now(),
     });
-    if (!existed) awardXp(db, req.user, XP.nutrition, 'nutrition', day);
+    if (!existed) awardXp(db, req.user, XP.nutrition, 'nutrition', day, `nutrition:${day}`);
     const newly = checkAchievements(db, req.user, gamiCtx(db, req.user), day);
     res.json({ nutrition: n, gami: gamiResult(db, req.user, newly) });
   });

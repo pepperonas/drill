@@ -270,4 +270,14 @@ const MIGRATIONS = [
     );
     CREATE INDEX idx_freeze_events_user ON freeze_events(user_id, created_at);
   `],
+
+  // ---------------------------------------------------------------------------
+  // 004: tag XP events with their source so undoing an action can precisely
+  // reverse its XP. `ref` is like 'checkin:2026-06-15', 'workout:42',
+  // 'entry:99', 'nutrition:2026-06-15', 'achievement:streak_7'.
+  // ---------------------------------------------------------------------------
+  ['004_xp_ref', `
+    ALTER TABLE xp_events ADD COLUMN ref TEXT;
+    CREATE INDEX idx_xp_ref ON xp_events(user_id, ref);
+  `],
 ];

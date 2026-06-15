@@ -66,14 +66,14 @@ Eine multitenant Fitness- & Körper-Tracking-PWA mit Google-Login, Charts, Gamif
 - **Sessions:** HMAC-SHA256-signierte Cookies (kein JWT-Lib), `secure` nur über HTTPS.
 - **OAuth:** Authorization-Code-Flow ohne SDK; ID-Token-Verifikation via Google `tokeninfo`.
 - **Tracker-System:** voll generisch — ein `trackers`-Eintrag definiert Typ/Einheit/Ziel/XP, `tracker_entries` hält die Werte. Neue Metrik = neuer Datensatz, **keine** Schemaänderung. Logik in `server/trackers.js` (Seeding, Ziel-Fortschritt, 1RM, Korrelation, gleitender Durchschnitt).
-- **Gamification:** server-autoritativ — append-only XP-Ledger + denormalisiertes Rollup auf dem User; jeder Tracker-Eintrag vergibt seine konfigurierbare XP.
+- **Gamification:** server-autoritativ — append-only XP-Ledger + denormalisiertes Rollup auf dem User; jeder Tracker-Eintrag vergibt seine konfigurierbare XP. **XP ist rückgängig-fähig:** jedes Event trägt eine Quell-`ref`; beim Löschen einer Aktion werden genau deren XP abgezogen und das Level neu berechnet (Erfolge bleiben erhalten). `scripts/rebuild-xp.js` baut den Ledger deterministisch neu auf.
 - **Zeitzonen:** alle „Tage" als `YYYY-MM-DD` in der User-Zeitzone, damit Streaks zur Wanduhr passen.
 
 ### Datenmodell (Auszug)
 
 `users` · **`trackers`** (frei definierte Tracker) + **`tracker_entries`** · **`user_options`** (editierbare Picker) · **`personal_records`** · **`streak_freeze`** (Konfig + Stand) + **`freeze_events`** (Ledger) · `checkins` · `workouts` + `workout_sets` · `nutrition_logs` · `metrics` *(legacy, migriert in `trackers`)* · `xp_events` · `user_achievements` · `email_prefs` · `email_log`
 
-Migrationen sind append-only (`server/migrations.js`); `002_trackers` legt das Tracker-System an und überführt bestehende `metrics`-Werte verlustfrei in Tracker der Kategorie *body*; `003_streak_freeze` ergänzt den konfigurierbaren Streak-Schutz.
+Migrationen sind append-only (`server/migrations.js`); `002_trackers` legt das Tracker-System an und überführt bestehende `metrics`-Werte verlustfrei in Tracker der Kategorie *body*; `003_streak_freeze` ergänzt den konfigurierbaren Streak-Schutz; `004_xp_ref` macht XP rückgängig-fähig.
 
 ### API-Überblick (Auszug, alles unter `/api`)
 
@@ -113,7 +113,7 @@ npm run dev                   # http://localhost:5180  (proxyt /api -> :4252)
 ### Tests
 
 ```bash
-cd server && npm test         # node:test — 38 Tests
+cd server && npm test         # node:test — 41 Tests
 ```
 Abgedeckt: Gamification (Level-Kurve, Streaks, Achievements), Tracker-Logik (1RM, Ziel-Fortschritt,
 Korrelation/Pearson, gleitender Durchschnitt, Default-Seeding), **Streak-Freeze** (Überbrückung

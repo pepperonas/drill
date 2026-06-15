@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.2.1 — Reversible XP on undo (2026-06-15)
+
+- **Undoing an action now removes the XP it granted** (and recomputes the level).
+  XP events are tagged with a source `ref` (`checkin:<day>`, `workout:<id>`,
+  `entry:<id>`, `nutrition:<day>`, `metric:<id>`); deleting the action reverses
+  exactly those events. Deleting a check-in also recomputes the streak from the
+  surviving history. (Achievements stay earned — their bonus is not revoked.)
+- Added `rebuildXp` + `scripts/rebuild-xp.js`, a deterministic, idempotent repair
+  that rebuilds a user's XP ledger from ground truth — fixes accounts inflated by
+  earlier deletes that didn't reverse XP. Migration `004_xp_ref` adds the `ref`
+  column. Tests at **41**.
+
 ## v1.2.0 — Configurable streak-freeze (2026-06-15)
 
 A fully user-configurable "streak freeze" system — both **scoring** and **presentation**:
