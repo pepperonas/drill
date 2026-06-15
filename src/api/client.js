@@ -33,6 +33,7 @@ export const api = {
   me: () => req('GET', '/me'),
   dashboard: () => req('GET', '/dashboard'),
   gamification: () => req('GET', '/gamification'),
+  stats: () => req('GET', '/stats'),
 
   metrics: (kind) => req('GET', '/metrics' + (kind ? `?kind=${encodeURIComponent(kind)}` : '')),
   addMetric: (m) => req('POST', '/metrics', m),

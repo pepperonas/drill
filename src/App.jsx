@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import Trackers from './pages/Trackers.jsx';
 import TrackerDetail from './pages/TrackerDetail.jsx';
 import Insights from './pages/Insights.jsx';
+import Stats from './pages/Stats.jsx';
 import Training from './pages/Training.jsx';
 import Nutrition from './pages/Nutrition.jsx';
 import Attendance from './pages/Attendance.jsx';
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/trackers" element={<Trackers />} />
         <Route path="/trackers/:id" element={<TrackerDetail />} />
         <Route path="/insights" element={<Insights />} />
+        <Route path="/stats" element={<Stats />} />
         <Route path="/training" element={<Training />} />
         <Route path="/nutrition" element={<Nutrition />} />
         <Route path="/attendance" element={<Attendance />} />

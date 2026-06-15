@@ -208,8 +208,9 @@ button { font-family: inherit; }
 /* ---- Heatmap (attendance) ---- */
 .heatmap { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 4px; overflow-x: auto; padding-bottom: 4px; }
 .hm-cell { width: 14px; height: 14px; border-radius: 4px; background: var(--surface-container-highest); }
-.hm-cell.l1 { background: var(--lime-40); }
-.hm-cell.l2 { background: var(--lime-60); }
+/* Theme-aware intensity: blend the active primary into the empty-cell color. */
+.hm-cell.l1 { background: color-mix(in srgb, var(--primary) 28%, var(--surface-container-highest)); }
+.hm-cell.l2 { background: color-mix(in srgb, var(--primary) 58%, var(--surface-container-highest)); }
 .hm-cell.l3 { background: var(--primary); }
 
 /* ---- Misc ---- */

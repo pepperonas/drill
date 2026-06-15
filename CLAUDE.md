@@ -76,6 +76,12 @@ the session cookie's `secure` flag is auto-relaxed so http login works.
   and recompute the rollup; deleting a check-in also calls `recomputeStreakFromHistory`. Achievements
   are NOT revoked on undo (earned = kept). `rebuildXp(db, user)` deterministically rebuilds the whole
   ledger from current data (repair for drifted accounts); run it via `node scripts/rebuild-xp.js [id]`.
+- **Analytics/Statistik**: `server/analytics.js` `computeStats()` builds the whole `/api/stats` payload
+  (XP growth curve + level markers, XP-per-day heatmap, weekly check-in/workout buckets via `isoWeekKey`,
+  30-day balance radar, workout-category donut, headline scalars). Frontend `src/pages/Stats.jsx`
+  (route `/stats`) renders it with Recharts; the heatmap reuses `.hm-cell` (theme-aware via `color-mix`).
+  Note: Recharts `ResponsiveContainer` collapses under Playwright fullPage capture — screenshot with a
+  tall fixed viewport instead.
 - **Days are timezone-local strings** (`YYYY-MM-DD` in the user's tz, `server/time.js`) so streaks
   and "today" match the user's wall clock, not UTC. The client reports its tz to `/api/me` on load.
 - **Metrics are generic** (`metrics` table: kind/value/unit/day) — adding a new body measurement is a

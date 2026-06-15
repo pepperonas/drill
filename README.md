@@ -41,6 +41,7 @@ Eine multitenant Fitness- & Körper-Tracking-PWA mit Google-Login, Charts, Gamif
   - **Editierbare Picker:** eigene Check-in-Aktivitäten & Workout-Kategorien; **Übungs-Bibliothek** mit Autocomplete
 - **🎯 Ziele & Bestleistungen** — Ziel-Fortschritt pro Tracker; **automatische Personal-Records** (Epley-1RM) im Training mit Glückwunsch.
 - **📈 Flexible Charts & Insights** — Zeitraum-Wahl (7T/30T/90T/1J/alles), gleitender Durchschnitt, **Korrelations-Analyse** zweier Tracker (Pearson-r + Scatter, z. B. Schlaf vs. Stimmung).
+- **📊 Motivierende Statistik-Seite** — kumulative **XP-Wachstumskurve** mit Level-Markern, **Aktivitäts-Heatmap** (Intensität = XP/Tag), **Wochen-Rhythmus** (Check-ins vs. Workouts), **Balance-Radar** über alle Lebensbereiche und **Trainings-Donut**.
 - **📅 Anwesenheit & Training** — täglicher Check-in mit 17-Wochen-Heatmap; Workouts mit Kategorie, Dauer und Sätzen (Übung · kg · Wdh.).
 - **🥗 Ernährung** — Kalorien & Makros **oder** einfache Tagesbewertung + Wasser.
 - **🎮 Volle Gamification** — XP pro Aktivität (pro Tracker einstellbar), Level-Kurve, Tages-**Streaks** mit Bonus, **29 freischaltbare Erfolge** inkl. erreichbarer Langzeit-Meilensteine (100-Tage-Serie, 365 Check-ins gesamt, Level 50, 500 t Volumen).
@@ -49,6 +50,14 @@ Eine multitenant Fitness- & Körper-Tracking-PWA mit Google-Login, Charts, Gamif
 - **🎨 Material 3 Expressive + 4 Themes** — tonal surfaces, 10-stufige Shape-Scale, Spring-Motion, emphasized Typography (Roboto Flex). **4 umschaltbare Themes** (Electric Lime · Ember · Aqua · Grape), jeweils komplette tonale Paletten; Auswahl in den Einstellungen, persistiert, mit „Wash"-Übergang. Gut sichtbare Animationen: Seitenübergänge, gestaffeltes Karten-Einblenden, Streak-Ring-Pop, animierte Fortschrittsbalken.
 - **📱 PWA** — installierbar, offline-Shell, Service Worker mit versioniertem Cache.
 - **🛡️ DSGVO** — vollständiger JSON-Export und unwiderrufliche Konto-/Datenlöschung in den Einstellungen.
+
+## 📊 Statistik & Visualisierung
+
+<div align="center">
+
+![drill Statistik — XP-Wachstum, Heatmap, Wochen-Rhythmus, Balance-Radar, Trainings-Donut](public/screenshot-stats.png)
+
+</div>
 
 ## 🏗️ Architektur
 

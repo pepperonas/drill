@@ -117,8 +117,13 @@ export default function Dashboard() {
         </>
       )}
 
-      {/* Insights + totals */}
+      {/* Stats + Insights + totals */}
       <div className="section-title"><span className="title">Mehr</span></div>
+      <div className="card tap" onClick={() => nav('/stats')} style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+        <span style={{ fontSize: '1.8rem' }}>📊</span>
+        <div style={{ flex: 1 }}><div className="title">Statistik</div><div className="body">XP-Wachstum, Heatmap, Balance & mehr</div></div>
+        <span style={{ color: 'var(--primary)' }}>→</span>
+      </div>
       <div className="card tap" onClick={() => nav('/insights')} style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
         <span style={{ fontSize: '1.8rem' }}>🔍</span>
         <div style={{ flex: 1 }}><div className="title">Insights</div><div className="body">Zusammenhänge zwischen deinen Trackern entdecken</div></div>

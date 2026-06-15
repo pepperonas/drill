@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.4.0 — Motivational statistics dashboard (2026-06-15)
+
+- New **Statistik** page (`/stats`, linked from the dashboard) with several
+  motivation-first visualizations from a single `GET /api/stats` aggregate
+  (`server/analytics.js`):
+  - cumulative **XP growth curve** with level-threshold markers
+  - **activity heatmap** (intensity = XP earned per day, theme-aware colors)
+  - **weekly rhythm** bars (check-ins vs. workouts)
+  - **balance radar** across Konsistenz / Training / Ernährung / Körper /
+    Wohlbefinden (30-day view)
+  - **workout-category donut**
+  - headline scalars (30-day XP, active days, best day)
+- Heatmap cells now blend the active theme's primary color (via `color-mix`).
+- README gains a Statistik screenshot. Tests at **42**. SW cache -> v1.4.0.
+
 ## v1.3.1 — Theme syncs per account + mobile polish (2026-06-15)
 
 - **Theme is now saved on the account** (migration `005_user_theme`), so it

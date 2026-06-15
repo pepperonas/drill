@@ -100,6 +100,17 @@ test('workout logging detects a personal record', async () => {
   assert.ok(res.prs.length === 1 && res.prs[0].exercise === 'Bankdrücken');
 });
 
+test('stats endpoint returns visualization aggregates', async () => {
+  const s = await (await call('GET', '/api/stats')).json();
+  assert.ok(Array.isArray(s.xpCurve) && s.xpCurve.length > 0, 'xp curve present');
+  assert.ok(s.totalXp > 0);
+  assert.equal(s.radar.length, 5);
+  assert.ok(s.radar.every((d) => d.value >= 0 && d.value <= 100));
+  assert.ok(s.categories.some((c) => c.name === 'Push'), 'workout category counted');
+  assert.equal(typeof s.heatmap, 'object');
+  assert.ok(s.headline && typeof s.headline.xp30 === 'number');
+});
+
 test('streak-freeze config is readable and updatable', async () => {
   const got = await (await call('GET', '/api/streak-freeze')).json();
   assert.equal(got.config.balance, 1);            // default starter freeze

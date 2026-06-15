@@ -3,6 +3,7 @@
  */
 import express from 'express';
 import { dashboardSummary } from '../stats.js';
+import { computeStats } from '../analytics.js';
 import { allAchievements, levelProgress } from '../gamification.js';
 
 export function dashboardRoutes(db, auth) {
@@ -11,6 +12,10 @@ export function dashboardRoutes(db, auth) {
 
   r.get('/dashboard', (req, res) => {
     res.json(dashboardSummary(db, req.user));
+  });
+
+  r.get('/stats', (req, res) => {
+    res.json(computeStats(db, req.user));
   });
 
   r.get('/gamification', (req, res) => {
