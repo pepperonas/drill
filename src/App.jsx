@@ -36,7 +36,8 @@ export default function App() {
   return (
     <div className="app">
       <TopBar />
-      <Routes>
+      <div className="page" key={loc.pathname}>
+      <Routes location={loc}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/trackers" element={<Trackers />} />
         <Route path="/trackers/:id" element={<TrackerDetail />} />
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </div>
       <NavBar current={loc.pathname} onNavigate={(p) => nav(p)} />
     </div>
   );

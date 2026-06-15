@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.3.0 — Themes & expressive animations (2026-06-15)
+
+- **Theme switcher** with 4 complete Material 3 Expressive palettes: Electric Lime
+  (default), **Ember** (warm coral/amber), **Aqua** (cyan/sky), **Grape** (violet/
+  magenta). Picked in Settings → Design, persisted in `localStorage`, applied
+  before paint (no flash), with the PWA theme-color synced per theme.
+- **Visible animations:** an accent "wash" sweep on theme change, page transitions
+  on route change, staggered card/tile/badge entrance, streak-ring pop, FAB spring
+  and a shimmering level progress bar — all gated by `prefers-reduced-motion`.
+
 ## v1.2.1 — Reversible XP on undo (2026-06-15)
 
 - **Undoing an action now removes the XP it granted** (and recomputes the level).

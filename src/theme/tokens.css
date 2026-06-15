@@ -95,43 +95,51 @@
   color-scheme: dark;
 }
 
-/* Light theme for users who prefer it */
-@media (prefers-color-scheme: light) {
-  :root[data-theme="auto"] {
-    --primary:            #4a5c00;
-    --on-primary:         #ffffff;
-    --primary-container:  #c6ff00;
-    --on-primary-container:#161e00;
+/* ============================================================================
+   Alternate themes — applied via <html data-theme="…">. Each is a complete
+   Material 3 Expressive tonal palette (vibrant key color + secondary/tertiary +
+   layered surface containers). Shape, motion and type stay shared from :root.
+   Error roles inherit from :root. (default / no attribute = "lime".)
+============================================================================ */
 
-    --secondary:          #1b5273;
-    --on-secondary:       #ffffff;
-    --secondary-container:#c7ecff;
-    --on-secondary-container:#001e2c;
+/* 🔥 Ember — warm coral & amber sunset */
+[data-theme="ember"] {
+  --primary:#ffb68a; --on-primary:#4a1e05; --primary-container:#7a3411; --on-primary-container:#ffdbcc;
+  --secondary:#ffd9a0; --on-secondary:#442b00; --secondary-container:#6a4a1c; --on-secondary-container:#ffe7c4;
+  --tertiary:#ff9ea8; --on-tertiary:#5a1a22; --tertiary-container:#7d2f38; --on-tertiary-container:#ffd9dd;
+  --background:#171008; --on-background:#f1e6da; --surface:#171008; --on-surface:#f1e6da;
+  --on-surface-variant:#d8c6b6; --outline:#a08c79; --outline-variant:#4f4135;
+  --surface-dim:#171008; --surface-bright:#3f372d;
+  --surface-container-lowest:#100a05; --surface-container-low:#201810; --surface-container:#251b12;
+  --surface-container-high:#30251b; --surface-container-highest:#3c3025;
+  --inverse-surface:#f1e6da; --inverse-on-surface:#352c20;
+  --chart-1:#ffb68a; --chart-2:#ffd34d; --chart-3:#ff9ea8; --chart-4:#c6a0ff; --chart-5:#8fd6ff;
+}
 
-    --tertiary:           #984729;
-    --on-tertiary:        #ffffff;
-    --tertiary-container: #ffdbcf;
-    --on-tertiary-container:#3a0c00;
+/* 🌊 Aqua — cool cyan & sky */
+[data-theme="aqua"] {
+  --primary:#5fdfe6; --on-primary:#00363a; --primary-container:#00504f; --on-primary-container:#b6fff7;
+  --secondary:#8fd6ff; --on-secondary:#003549; --secondary-container:#0e4d68; --on-secondary-container:#c7ecff;
+  --tertiary:#bcc2ff; --on-tertiary:#1f2a6b; --tertiary-container:#37418c; --on-tertiary-container:#e0e0ff;
+  --background:#0c1416; --on-background:#dde4e6; --surface:#0c1416; --on-surface:#dde4e6;
+  --on-surface-variant:#bdc9cc; --outline:#879396; --outline-variant:#3c484b;
+  --surface-dim:#0c1416; --surface-bright:#323b3d;
+  --surface-container-lowest:#060e0f; --surface-container-low:#131c1e; --surface-container:#172123;
+  --surface-container-high:#212b2d; --surface-container-highest:#2c3638;
+  --inverse-surface:#dde4e6; --inverse-on-surface:#1b2a2c;
+  --chart-1:#5fdfe6; --chart-2:#8fd6ff; --chart-3:#bcc2ff; --chart-4:#7ee79e; --chart-5:#ffd34d;
+}
 
-    --background:         #fcfaf0;
-    --on-background:      #1b1c16;
-    --surface:            #fcfaf0;
-    --on-surface:         #1b1c16;
-    --on-surface-variant: #45483b;
-    --outline:            #767a69;
-    --outline-variant:    #c6c9b6;
-
-    --surface-dim:        #dcdccf;
-    --surface-bright:     #fcfaf0;
-    --surface-container-lowest:#ffffff;
-    --surface-container-low:  #f6f4e8;
-    --surface-container:  #f0eee2;
-    --surface-container-high: #eae8dd;
-    --surface-container-highest:#e4e3d7;
-
-    --inverse-surface:    #303128;
-    --inverse-on-surface: #f2f1e4;
-
-    color-scheme: light;
-  }
+/* 🍇 Grape — bold violet & magenta */
+[data-theme="grape"] {
+  --primary:#d6b4ff; --on-primary:#2a0e5e; --primary-container:#48297f; --on-primary-container:#ecddff;
+  --secondary:#ff9ec7; --on-secondary:#5a1138; --secondary-container:#7c2b54; --on-secondary-container:#ffd9e8;
+  --tertiary:#ffb59c; --on-tertiary:#5a1c0a; --tertiary-container:#7a3320; --on-tertiary-container:#ffdbcf;
+  --background:#141019; --on-background:#e8e0ef; --surface:#141019; --on-surface:#e8e0ef;
+  --on-surface-variant:#cbbfd6; --outline:#968a9f; --outline-variant:#453c4d;
+  --surface-dim:#141019; --surface-bright:#393143;
+  --surface-container-lowest:#0e0a13; --surface-container-low:#1c1726; --surface-container:#211b2c;
+  --surface-container-high:#2b2537; --surface-container-highest:#372f43;
+  --inverse-surface:#e8e0ef; --inverse-on-surface:#312b3c;
+  --chart-1:#d6b4ff; --chart-2:#ff9ec7; --chart-3:#ffb59c; --chart-4:#8fd6ff; --chart-5:#ffe08a;
 }

@@ -46,7 +46,7 @@ Eine multitenant Fitness- & Körper-Tracking-PWA mit Google-Login, Charts, Gamif
 - **🎮 Volle Gamification** — XP pro Aktivität (pro Tracker einstellbar), Level-Kurve, Tages-**Streaks** mit Bonus, **29 freischaltbare Erfolge** inkl. erreichbarer Langzeit-Meilensteine (100-Tage-Serie, 365 Check-ins gesamt, Level 50, 500 t Volumen).
 - **🧊 Konfigurierbarer Streak-Schutz** — voll anpassbares „Streak-Freeze"-System: **Wertung** (max. Anzahl, Verdienst-Modi: pro Streak-Meilenstein / pro X Check-ins / Wochengeschenk / bei Level-Up, ob ein geschützter Tag die Serie *wachsen lässt* oder nur *erhält*, automatischer Einsatz) **und Gestaltung** (Name, Symbol, Farbe, Beschreibung). Verpasste Tage werden automatisch überbrückt, solange Schilde vorhanden sind.
 - **📧 Motivations-E-Mails** — wöchentlicher Report, Streak-in-Gefahr-Alert, täglicher Nudge. Double-Opt-in + 1-Klick-Abmeldung, geplant via `node-cron`.
-- **🎨 Material 3 Expressive** — tonal surfaces, 10-stufige Shape-Scale, Spring-Motion, emphasized Typography (Roboto Flex), Electric-Lime-Akzent auf tiefem Neutral.
+- **🎨 Material 3 Expressive + 4 Themes** — tonal surfaces, 10-stufige Shape-Scale, Spring-Motion, emphasized Typography (Roboto Flex). **4 umschaltbare Themes** (Electric Lime · Ember · Aqua · Grape), jeweils komplette tonale Paletten; Auswahl in den Einstellungen, persistiert, mit „Wash"-Übergang. Gut sichtbare Animationen: Seitenübergänge, gestaffeltes Karten-Einblenden, Streak-Ring-Pop, animierte Fortschrittsbalken.
 - **📱 PWA** — installierbar, offline-Shell, Service Worker mit versioniertem Cache.
 - **🛡️ DSGVO** — vollständiger JSON-Export und unwiderrufliche Konto-/Datenlöschung in den Einstellungen.
 

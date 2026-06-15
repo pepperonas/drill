@@ -5,6 +5,7 @@ import './index.css';
 import App from './App.jsx';
 import { AuthProvider } from './auth/AuthContext.jsx';
 import { ToastProvider } from './components/Toast.jsx';
+import { ThemeProvider } from './theme/ThemeContext.jsx';
 
 // Register the service worker for offline shell / installability.
 if ('serviceWorker' in navigator) {
@@ -18,7 +19,9 @@ createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
-          <App />
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>

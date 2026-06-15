@@ -3,9 +3,11 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { api } from '../api/client.js';
 import { StreakFreezeSettings } from '../components/StreakFreezeSettings.jsx';
+import { useTheme } from '../theme/ThemeContext.jsx';
 
 export default function Settings() {
   const { user, prefs, emailEnabled, logout, refresh } = useAuth();
+  const { theme, themes, setTheme } = useTheme();
   const toast = useToast();
   const [p, setP] = useState(prefs || { weekly: false, streak_alert: false, daily_nudge: false, confirmed: false });
   const [saving, setSaving] = useState(false);
@@ -56,6 +58,30 @@ export default function Settings() {
           </div>
         </div>
         <button className="btn outline" onClick={logout}>Abmelden</button>
+      </div>
+
+      <div className="section-title"><span className="title">Design</span></div>
+      <div className="grid cols-2">
+        {themes.map((t) => (
+          <button key={t.id} onClick={() => setTheme(t.id)}
+            style={{
+              cursor: 'pointer', textAlign: 'left', padding: 14, borderRadius: 'var(--shape-lg)',
+              background: t.surface, color: '#fff',
+              border: theme === t.id ? `2.5px solid ${t.primary}` : '2px solid var(--outline-variant)',
+              display: 'flex', flexDirection: 'column', gap: 12,
+              boxShadow: theme === t.id ? `0 0 0 4px color-mix(in srgb, ${t.primary} 25%, transparent)` : 'none',
+            }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: 700, fontSize: '.95rem' }}>{t.name}</span>
+              {theme === t.id && <span style={{ color: t.primary, fontWeight: 800 }}>✓</span>}
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <span style={{ width: 26, height: 26, borderRadius: '50%', background: t.primary }} />
+              <span style={{ width: 26, height: 26, borderRadius: '50%', background: t.secondary }} />
+              <span style={{ flex: 1, height: 26, borderRadius: 8, background: t.bg, border: '1px solid rgba(255,255,255,.12)' }} />
+            </div>
+          </button>
+        ))}
       </div>
 
       <StreakFreezeSettings />

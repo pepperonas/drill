@@ -24,6 +24,15 @@
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- Apply saved theme before paint to avoid a flash of the default theme -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('drill_theme');
+          if (t && t !== 'lime' && /^[a-z]+$/.test(t)) document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <!-- Roboto Flex: the variable font behind Material 3 Expressive typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
