@@ -31,6 +31,7 @@ export function openDb(path) {
     `),
     getUserById: db.prepare('SELECT * FROM users WHERE id = ?'),
     setUserTz: db.prepare('UPDATE users SET tz = ? WHERE id = ?'),
+    setUserTheme: db.prepare('UPDATE users SET theme = ? WHERE id = ?'),
     deleteUser: db.prepare('DELETE FROM users WHERE id = ?'),
     allConfirmedUsers: db.prepare('SELECT * FROM users'),
 

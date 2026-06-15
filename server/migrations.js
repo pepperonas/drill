@@ -280,4 +280,9 @@ const MIGRATIONS = [
     ALTER TABLE xp_events ADD COLUMN ref TEXT;
     CREATE INDEX idx_xp_ref ON xp_events(user_id, ref);
   `],
+
+  // 005: persist the chosen theme per account so it syncs across devices.
+  ['005_user_theme', `
+    ALTER TABLE users ADD COLUMN theme TEXT;
+  `],
 ];

@@ -8,6 +8,9 @@ import { config } from '../config.js';
 import { sendMail } from '../mailer.js';
 import { confirmEmail } from '../email-templates.js';
 
+// Allowed theme ids (mirror of src/theme/themes.js).
+const THEMES = new Set(['lime', 'ember', 'aqua', 'grape']);
+
 function ensurePrefs(db, user) {
   let p = db.getPrefs.get(user.id);
   if (!p) {
@@ -27,7 +30,7 @@ export function accountRoutes(db, auth) {
     const u = req.user;
     const prefs = ensurePrefs(db, u);
     res.json({
-      user: { id: u.id, email: u.email, name: u.name, picture: u.picture, tz: u.tz },
+      user: { id: u.id, email: u.email, name: u.name, picture: u.picture, tz: u.tz, theme: u.theme || 'lime' },
       emailEnabled: config.emailEnabled,
       prefs: {
         weekly: !!prefs.weekly, streak_alert: !!prefs.streak_alert,
@@ -39,6 +42,8 @@ export function accountRoutes(db, auth) {
   r.put('/me', auth.requireUser, (req, res) => {
     const tz = req.body && req.body.tz;
     if (tz && typeof tz === 'string') db.setUserTz.run(tz.slice(0, 64), req.user.id);
+    const theme = req.body && req.body.theme;
+    if (theme && THEMES.has(String(theme))) db.setUserTheme.run(String(theme), req.user.id);
     res.json({ ok: true });
   });
 

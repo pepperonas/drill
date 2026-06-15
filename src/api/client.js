@@ -51,6 +51,7 @@ export const api = {
 
   setEmailPrefs: (p) => req('PUT', '/email-prefs', p),
   setTz: (tz) => req('PUT', '/me', { tz }),
+  setTheme: (theme) => req('PUT', '/me', { theme }),
   deleteAccount: () => req('DELETE', '/me'),
 
   // ---- flexible trackers ----

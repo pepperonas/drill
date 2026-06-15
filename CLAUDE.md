@@ -17,8 +17,10 @@ charts, gamification (XP, levels, streaks, badges) and motivational emails. Visu
   `src/lib/trackerTypes.js` = tracker type/category/template metadata used by the forms,
   `src/theme/tokens.css` = the entire MD3 Expressive token set (colors, shape scale, motion springs)
   with 4 themes as `[data-theme="…"]` blocks (lime default + ember/aqua/grape); `src/theme/themes.js`
-  + `ThemeContext.jsx` drive the switcher (persisted in localStorage, applied pre-paint via an inline
-  script in index.html, `<meta theme-color>` synced). `src/index.css` holds the hand-built component
+  + `ThemeContext.jsx` drive the switcher. **The account is the source of truth** (`users.theme`,
+  migration 005; `GET/PUT /me`); localStorage is the pre-paint cache (inline script in index.html),
+  and `ThemeContext` adopts `user.theme` on load + persists changes via `api.setTheme`.
+  `<meta theme-color>` is synced per theme. `src/index.css` holds the hand-built component
   classes (no Material Web Components) and the entrance/page/theme-wash animations.
 - **Backend** (`server/`): Express + better-sqlite3. Entry `index.js` → `app.js` (wiring) → `routes/*`.
 

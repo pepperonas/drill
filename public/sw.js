@@ -1,6 +1,6 @@
 /* drill service worker — network-first for navigation, cache-first for hashed
    assets. Bump CACHE on each release so clients fetch fresh files. */
-const CACHE = 'drill-v1.3.0';
+const CACHE = 'drill-v1.3.1';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg'];
 
 self.addEventListener('install', (e) => {

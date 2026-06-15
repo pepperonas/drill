@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.3.1 — Theme syncs per account + mobile polish (2026-06-15)
+
+- **Theme is now saved on the account** (migration `005_user_theme`), so it
+  follows you across devices/browsers — not just `localStorage`. `/me` returns it;
+  `PUT /me` persists it (validated against the allowed set). localStorage stays as
+  the instant pre-paint cache; the account is the source of truth on load.
+- **Mobile polish:** the 6-tab bottom navigation now fits narrow phones (≤430px)
+  without horizontal scrolling (tighter spacing, evenly distributed).
+
 ## v1.3.0 — Themes & expressive animations (2026-06-15)
 
 - **Theme switcher** with 4 complete Material 3 Expressive palettes: Electric Lime

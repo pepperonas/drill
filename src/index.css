@@ -139,6 +139,14 @@ button { font-family: inherit; }
 .nav-item .ic { font-size: 1.25rem; line-height: 1; }
 .nav-item.active { background: var(--primary-container); color: var(--on-primary-container); }
 
+/* Fit all six tabs on narrow phones without horizontal scrolling. */
+@media (max-width: 430px) {
+  .navbar { padding-left: 6px; padding-right: 6px; }
+  .navbar-inner { padding: 5px; gap: 0; width: 100%; justify-content: space-between; }
+  .nav-item { padding: 7px 6px; font-size: .6rem; flex: 1; }
+  .nav-item .ic { font-size: 1.15rem; }
+}
+
 /* ---- Streak ring / level progress ---- */
 .ring-wrap { display: flex; align-items: center; gap: 18px; }
 .progress-track {
