@@ -300,11 +300,54 @@ body, .card, .tile, .badge, .navbar-inner, .nav-item, .chip, .input, .topbar, .p
 .progress-fill::after {
   content: ''; position: absolute; inset: 0;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent);
-  transform: translateX(-100%); animation: barShine 2.4s var(--ease-effects) infinite;
+  transform: translateX(-100%); animation: barShine 2.2s var(--ease-effects) 2;
 }
 @keyframes barShine { to { transform: translateX(100%); } }
 
+/* Progress bars grow in from the left on mount (scaleX keeps the inline width %). */
+.progress-fill { transform-origin: left center; animation: barGrow var(--dur-long) var(--ease-spatial) both; }
+@keyframes barGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Touch ripple (Material signature) — ink expands from the press point. */
+.btn, .chip, .nav-item, .fab, .tile, .card.tap { overflow: hidden; }
+.ripple-ink {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  transform: scale(0); background: currentColor; opacity: .22;
+  animation: rippleOut 600ms var(--ease-emphasized) forwards;
+}
+@keyframes rippleOut { to { transform: scale(1); opacity: 0; } }
+
+/* Bottom-nav active pill springs when a tab becomes active. */
+.nav-item.active { animation: navPop var(--dur-medium) var(--ease-spatial); }
+@keyframes navPop {
+  0% { transform: scale(.82); }
+  55% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+/* Active tab icon does a little hop. */
+.nav-item.active .ic { animation: iconHop var(--dur-long) var(--ease-spatial); }
+@keyframes iconHop {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-5px) scale(1.15); }
+  100% { transform: translateY(0); }
+}
+
+/* Chips spring on selection. */
+.chip.sel { animation: chipPop var(--dur-short) var(--ease-spatial); }
+@keyframes chipPop { 0% { transform: scale(.9); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
+
+/* Confetti burst on level-up / achievement. */
+.confetti { position: fixed; inset: 0; z-index: 9998; pointer-events: none; overflow: hidden; }
+.confetti-piece {
+  position: absolute; top: -18px; width: 9px; height: 14px; border-radius: 2px; opacity: .95;
+  animation: confettiFall var(--dur) var(--ease-effects) var(--delay) forwards;
+}
+@keyframes confettiFall {
+  0%   { transform: translateY(-20px) translateX(0) rotate(var(--rot)); opacity: 1; }
+  100% { transform: translateY(104vh) translateX(var(--drift)) rotate(calc(var(--rot) + 540deg)); opacity: .85; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
-  .theme-wash { display: none; }
+  .theme-wash, .confetti { display: none; }
 }

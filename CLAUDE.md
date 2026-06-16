@@ -21,7 +21,11 @@ charts, gamification (XP, levels, streaks, badges) and motivational emails. Visu
   migration 005; `GET/PUT /me`); localStorage is the pre-paint cache (inline script in index.html),
   and `ThemeContext` adopts `user.theme` on load + persists changes via `api.setTheme`.
   `<meta theme-color>` is synced per theme. `src/index.css` holds the hand-built component
-  classes (no Material Web Components) and the entrance/page/theme-wash animations.
+  classes (no Material Web Components) and all motion: entrance/page/theme-wash plus the Expressive
+  set — touch ripple (`lib/ripple.js`, installed once in main.jsx; CSS `.ripple-ink`), count-up numbers
+  (`components/CountUp.jsx`), scaleX progress-bar grow, nav-active spring, chip pop, and confetti
+  (`components/Confetti.jsx`, fired by `useToast().celebrate`). Keep CSS animations FINITE — an infinite
+  keyframe makes Playwright screenshots hang.
 - **Backend** (`server/`): Express + better-sqlite3. Entry `index.js` → `app.js` (wiring) → `routes/*`.
 
 ## Commands

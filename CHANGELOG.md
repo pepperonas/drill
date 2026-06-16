@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.5.0 — Expressive animations (2026-06-16)
+
+Material 3 Expressive motion pass across the app (all `prefers-reduced-motion` aware):
+
+- **Touch ripple** on buttons, chips, tiles, tappable cards, FAB and nav items
+  (delegated pointer listener, `src/lib/ripple.js`).
+- **Count-up numbers** — dashboard stat tiles, streak-ring value and the Statistik
+  headline animate from 0 with an easeOutCubic ramp (`components/CountUp.jsx`).
+- **Progress bars grow in** (scaleX) on mount with a brief shine.
+- **Bottom-nav spring** — the active tab pops and its icon hops on switch.
+- **Chips spring** on selection.
+- **Confetti burst** on level-up / achievement unlock (`components/Confetti.jsx`),
+  wired into `useToast().celebrate`.
+- SW cache -> v1.5.0.
+
 ## v1.4.0 — Motivational statistics dashboard (2026-06-15)
 
 - New **Statistik** page (`/stats`, linked from the dashboard) with several

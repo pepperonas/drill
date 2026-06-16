@@ -8,6 +8,7 @@ import {
 import { api } from '../api/client.js';
 import { fmtDay, addDays } from '../lib/util.js';
 import { tooltipStyle } from './Dashboard.jsx';
+import { CountUp } from '../components/CountUp.jsx';
 
 const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
 
@@ -29,9 +30,9 @@ export default function Stats() {
 
       {/* motivational headline */}
       <div className="grid cols-3" style={{ marginBottom: 6 }}>
-        <div className="tile"><span className="v accent">+{d.headline.xp30}</span><span className="k">XP / 30 Tage</span></div>
-        <div className="tile"><span className="v">🔥 {d.headline.activeDays30}</span><span className="k">Aktive Tage</span></div>
-        <div className="tile"><span className="v">{d.headline.bestDay ? '⭐ ' + d.headline.bestDay.amt : '–'}</span><span className="k">Bester Tag (XP)</span></div>
+        <div className="tile"><span className="v accent"><CountUp value={d.headline.xp30} prefix="+" /></span><span className="k">XP / 30 Tage</span></div>
+        <div className="tile"><span className="v"><CountUp value={d.headline.activeDays30} prefix="🔥 " /></span><span className="k">Aktive Tage</span></div>
+        <div className="tile"><span className="v">{d.headline.bestDay ? <CountUp value={d.headline.bestDay.amt} prefix="⭐ " /> : '–'}</span><span className="k">Bester Tag (XP)</span></div>
       </div>
 
       {/* XP growth curve */}

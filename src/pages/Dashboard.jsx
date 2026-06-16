@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useToast } from '../components/Toast.jsx';
+import { CountUp, useCountUp } from '../components/CountUp.jsx';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -75,9 +76,9 @@ export default function Dashboard() {
 
       {/* Week stats */}
       <div className="grid cols-3" style={{ marginTop: 14 }}>
-        <Tile v={data.week.checkins} k="Check-ins / Woche" />
-        <Tile v={data.week.workouts} k="Workouts / Woche" />
-        <Tile v={'+' + data.week.xpWeek} k="XP / Woche" accent />
+        <Tile count={data.week.checkins} k="Check-ins / Woche" />
+        <Tile count={data.week.workouts} k="Workouts / Woche" />
+        <Tile count={data.week.xpWeek} prefix="+" k="XP / Woche" accent />
       </div>
 
       {/* Goals */}
@@ -131,8 +132,8 @@ export default function Dashboard() {
       </div>
 
       <div className="grid cols-3">
-        <Tile v={data.totals.checkins} k="Check-ins gesamt" />
-        <Tile v={data.totals.workouts} k="Workouts gesamt" />
+        <Tile count={data.totals.checkins} k="Check-ins gesamt" />
+        <Tile count={data.totals.workouts} k="Workouts gesamt" />
         <Tile v={Math.round(data.totals.volume / 1000) + 't'} k="Volumen bewegt" />
       </div>
     </div>
@@ -140,6 +141,7 @@ export default function Dashboard() {
 }
 
 function StreakRing({ value }) {
+  const shown = useCountUp(value, 800);
   const pct = Math.min(100, (value % 7) / 7 * 100) || (value > 0 ? 100 : 0);
   return (
     <div style={{
@@ -149,7 +151,7 @@ function StreakRing({ value }) {
     }}>
       <div style={{ width: 74, height: 74, borderRadius: '50%', background: 'var(--surface-container-high)', display: 'grid', placeItems: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '1.7rem', fontWeight: 800, lineHeight: 1 }}>{value}</div>
+          <div style={{ fontSize: '1.7rem', fontWeight: 800, lineHeight: 1 }}>{shown}</div>
           <div style={{ fontSize: '.62rem', letterSpacing: '.05em', color: 'var(--on-surface-variant)' }}>🔥 STREAK</div>
         </div>
       </div>
@@ -157,8 +159,15 @@ function StreakRing({ value }) {
   );
 }
 
-function Tile({ v, k, accent }) {
-  return <div className="tile"><span className={'v' + (accent ? ' accent' : '')}>{v}</span><span className="k">{k}</span></div>;
+function Tile({ v, count, prefix, suffix, k, accent }) {
+  return (
+    <div className="tile">
+      <span className={'v' + (accent ? ' accent' : '')}>
+        {count != null ? <CountUp value={count} prefix={prefix} suffix={suffix} /> : v}
+      </span>
+      <span className="k">{k}</span>
+    </div>
+  );
 }
 
 function Loading() {
