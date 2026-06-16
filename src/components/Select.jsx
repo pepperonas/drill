@@ -1,17 +1,19 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, useLayoutEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 /**
- * Accessible custom select (combobox + listbox) — replaces the native <select>,
- * which is the loudest "unstyled" tell. Keyboard: ↑/↓ move, Home/End, Enter/Space
- * select, Esc close, type-ahead. Closes on outside click; focus stays on the
- * trigger via aria-activedescendant. Honors focus-visible.
- *
- * Props: value, onChange(value), options [{value,label}], placeholder, ariaLabel.
+ * Accessible custom select (combobox + listbox) — replaces the native <select>.
+ * The dropdown is portaled to <body> and positioned with fixed coordinates from
+ * the trigger's rect (with upward flip when low on space) so it can never be
+ * trapped behind sibling cards by a stacking context. Keyboard: ↑/↓, Home/End,
+ * Enter/Space, Esc, type-ahead; closes on outside click; repositions on scroll.
  */
 export function Select({ value, onChange, options, placeholder = 'Wählen…', ariaLabel }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  const [pos, setPos] = useState(null);
   const rootRef = useRef(null);
+  const popRef = useRef(null);
   const listRef = useRef(null);
   const typeahead = useRef({ buf: '', t: 0 });
   const baseId = useId();
@@ -19,19 +21,42 @@ export function Select({ value, onChange, options, placeholder = 'Wählen…', a
   const selectedIndex = Math.max(0, options.findIndex((o) => String(o.value) === String(value)));
   const selected = options[selectedIndex];
 
+  const place = useCallback(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const maxH = 264;
+    const need = Math.min(maxH, options.length * 44 + 12);
+    const spaceBelow = window.innerHeight - r.bottom;
+    const up = spaceBelow < need && r.top > spaceBelow;
+    setPos({
+      left: Math.round(r.left), width: Math.round(r.width),
+      top: up ? undefined : Math.round(r.bottom + 6),
+      bottom: up ? Math.round(window.innerHeight - r.top + 6) : undefined,
+    });
+  }, [options.length]);
+
+  useLayoutEffect(() => { if (open) place(); }, [open, place]);
+
   useEffect(() => {
     if (!open) return;
     setActive(selectedIndex);
-    const onDoc = (e) => { if (!rootRef.current?.contains(e.target)) setOpen(false); };
+    const onDoc = (e) => {
+      if (!rootRef.current?.contains(e.target) && !popRef.current?.contains(e.target)) setOpen(false);
+    };
+    const onReflow = () => place();
     document.addEventListener('pointerdown', onDoc);
-    return () => document.removeEventListener('pointerdown', onDoc);
+    window.addEventListener('scroll', onReflow, true);
+    window.addEventListener('resize', onReflow);
+    return () => {
+      document.removeEventListener('pointerdown', onDoc);
+      window.removeEventListener('scroll', onReflow, true);
+      window.removeEventListener('resize', onReflow);
+    };
   }, [open]); // eslint-disable-line
 
   useEffect(() => {
-    if (open && listRef.current) {
-      const el = listRef.current.children[active];
-      el?.scrollIntoView({ block: 'nearest' });
-    }
+    if (open && listRef.current) listRef.current.children[active]?.scrollIntoView({ block: 'nearest' });
   }, [open, active]);
 
   const choose = (i) => { onChange(options[i].value); setOpen(false); };
@@ -41,7 +66,7 @@ export function Select({ value, onChange, options, placeholder = 'Wählen…', a
       if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) { e.preventDefault(); setOpen(true); }
       return;
     }
-    if (e.key === 'Escape') { e.preventDefault(); setOpen(false); }
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setOpen(false); }
     else if (e.key === 'ArrowDown') { e.preventDefault(); setActive((a) => Math.min(options.length - 1, a + 1)); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((a) => Math.max(0, a - 1)); }
     else if (e.key === 'Home') { e.preventDefault(); setActive(0); }
@@ -66,8 +91,11 @@ export function Select({ value, onChange, options, placeholder = 'Wählen…', a
         <span className={selected ? '' : 'sel-placeholder'}>{selected ? selected.label : placeholder}</span>
         <span className={'sel-caret' + (open ? ' open' : '')} aria-hidden="true">▾</span>
       </button>
-      {open && (
-        <ul className="sel-pop" role="listbox" ref={listRef} tabIndex={-1}>
+      {open && pos && createPortal(
+        <ul
+          className="sel-pop" role="listbox" ref={(n) => { popRef.current = n; listRef.current = n; }}
+          tabIndex={-1}
+          style={{ position: 'fixed', left: pos.left, width: pos.width, top: pos.top, bottom: pos.bottom, right: 'auto' }}>
           {options.map((o, i) => (
             <li
               key={o.value} id={`${baseId}-opt-${i}`} role="option"
@@ -79,7 +107,8 @@ export function Select({ value, onChange, options, placeholder = 'Wählen…', a
               {i === selectedIndex && <span aria-hidden="true">✓</span>}
             </li>
           ))}
-        </ul>
+        </ul>,
+        document.body,
       )}
     </div>
   );

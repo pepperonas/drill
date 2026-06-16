@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.6.1 — Fix select dropdown stacking (2026-06-16)
+
+- The custom select dropdown was rendered absolutely inside its card and got
+  trapped behind the following card (stacking-context overlap). It now portals to
+  `<body>` with fixed coordinates computed from the trigger rect (upward flip when
+  low on space, repositions on scroll/resize, z-index above sheets). Works
+  correctly inside bottom sheets too; Esc closes only the select, not the sheet.
+
 ## v1.6.0 — Obsessive-detail craft pass (2026-06-16)
 
 Concept that guided it: *"a heads-up control room for your training — every metric
