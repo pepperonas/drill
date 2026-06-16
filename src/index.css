@@ -49,6 +49,7 @@ button { font-family: inherit; }
 
 /* ---- Card ---- */
 .card {
+  position: relative;
   background: var(--surface-container);
   border-radius: var(--shape-xl);
   padding: 20px;
@@ -68,6 +69,7 @@ button { font-family: inherit; }
 
 /* ---- Stat tile ---- */
 .tile {
+  position: relative;
   background: var(--surface-container-high);
   border-radius: var(--shape-lg);
   padding: 16px;
@@ -288,15 +290,6 @@ button { font-family: inherit; }
   transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   transform-style: preserve-3d; will-change: transform;
 }
-.tilt::after {
-  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%),
-    color-mix(in srgb, var(--primary) 16%, transparent), transparent 60%);
-  opacity: 0; transition: opacity var(--dur-medium) var(--ease-effects);
-}
-@media (hover: hover) and (pointer: fine) {
-  .tilt:hover::after { opacity: 1; }
-}
 
 /* ---- Touch targets ≥44px on coarse pointers ---- */
 @media (pointer: coarse) {
@@ -312,6 +305,30 @@ body, .card, .tile, .badge, .navbar-inner, .nav-item, .chip, .input, .topbar, .p
   transition: background-color var(--dur-medium) var(--ease-effects),
               color var(--dur-medium) var(--ease-effects),
               border-color var(--dur-medium) var(--ease-effects);
+}
+/* Widgets also animate transform (lift) + border alongside the color morph. */
+.card, .tile {
+  transition: background-color var(--dur-medium) var(--ease-effects),
+              color var(--dur-medium) var(--ease-effects),
+              border-color var(--dur-short) var(--ease-effects),
+              transform var(--dur-medium) var(--ease-spatial);
+}
+
+/* Cursor-following highlight glow on widgets (driven by lib/glow.js → --mx/--my). */
+.card::before, .tile::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--primary) 13%, transparent), transparent 62%);
+  opacity: 0; transition: opacity var(--dur-medium) var(--ease-effects);
+}
+.card.glow-on::before, .tile.glow-on::before { opacity: 1; }
+/* Keep card/tile content above the glow layer. */
+.card > *, .tile > * { position: relative; z-index: 1; }
+
+/* Hover state layer for widgets — subtle lift + brighter edge (desktop pointers). */
+@media (hover: hover) and (pointer: fine) {
+  .card:not(.tilt):hover, .tile:hover { border-color: var(--outline); transform: translateY(-2px); }
+  .card.tap:hover { box-shadow: var(--elev-2); }
 }
 
 /* Theme-switch wash: a burst of the new accent sweeps across the screen. */

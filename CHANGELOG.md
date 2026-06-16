@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.6.3 — Cursor-following glow on widgets (2026-06-16)
+
+- A highlight glow now follows the cursor across all widget cards/tiles, with a
+  subtle hover lift + brighter edge (`lib/glow.js`: one delegated pointermove +
+  rAF, one rect read per frame, writes only `--mx/--my`; desktop pointers,
+  reduced-motion-safe). The dashboard hero gets the same glow plus its 3D tilt.
+- Fixed `useTilt` so the hero actually tilts: it's now a callback ref, so it binds
+  when the hero mounts (it renders only after data loads, so the old effect-on-mount
+  missed it). SW cache -> v1.6.3.
+
 ## v1.6.2 — Show app version (2026-06-16)
 
 - Discreet version number in the Settings footer, sourced once from

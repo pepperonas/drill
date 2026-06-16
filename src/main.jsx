@@ -7,8 +7,10 @@ import { AuthProvider } from './auth/AuthContext.jsx';
 import { ToastProvider } from './components/Toast.jsx';
 import { ThemeProvider } from './theme/ThemeContext.jsx';
 import { installRipple } from './lib/ripple.js';
+import { installGlow } from './lib/glow.js';
 
 installRipple();
+installGlow();
 
 // Register the service worker for offline shell / installability.
 if ('serviceWorker' in navigator) {
