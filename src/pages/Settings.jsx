@@ -5,6 +5,9 @@ import { api } from '../api/client.js';
 import { StreakFreezeSettings } from '../components/StreakFreezeSettings.jsx';
 import { useTheme } from '../theme/ThemeContext.jsx';
 
+// Injected from package.json at build time (vite define).
+const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
+
 export default function Settings() {
   const { user, prefs, emailEnabled, logout, refresh } = useAuth();
   const { theme, themes, setTheme } = useTheme();
@@ -107,6 +110,8 @@ export default function Settings() {
 
       <p className="body" style={{ textAlign: 'center', margin: '24px 0 8px', fontSize: '.78rem' }}>
         drill · train. track. transform.
+        <br />
+        <span style={{ opacity: 0.55 }}>v{APP_VERSION}</span>
       </p>
     </div>
   );

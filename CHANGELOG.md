@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.6.2 — Show app version (2026-06-16)
+
+- Discreet version number in the Settings footer, sourced once from
+  `package.json` and injected at build time via a Vite `define`
+  (`__APP_VERSION__`). Bump `package.json` version + the SW cache together per
+  release.
+
 ## v1.6.1 — Fix select dropdown stacking (2026-06-16)
 
 - The custom select dropdown was rendered absolutely inside its card and got
