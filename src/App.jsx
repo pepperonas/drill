@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext.jsx';
+import { useScrollRestoration } from './lib/useScrollRestoration.js';
 import { TopBar } from './components/TopBar.jsx';
 import { NavBar } from './components/NavBar.jsx';
 import Login from './pages/Login.jsx';
@@ -18,6 +19,7 @@ export default function App() {
   const { loading, user } = useAuth();
   const loc = useLocation();
   const nav = useNavigate();
+  const navType = useScrollRestoration();
 
   if (loading) {
     return (
@@ -37,7 +39,7 @@ export default function App() {
   return (
     <div className="app">
       <TopBar />
-      <div className="page" key={loc.pathname}>
+      <div className={'page' + (navType !== 'POP' ? ' page-anim' : '')} key={loc.pathname}>
       <Routes location={loc}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/trackers" element={<Trackers />} />

@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.6.0 — Obsessive-detail craft pass (2026-06-16)
+
+Concept that guided it: *"a heads-up control room for your training — every metric
+a dial, every action a satisfying mechanical response."*
+
+- **Premium navigation** — own scroll restoration: forward (PUSH) lands at top and
+  plays the entrance; back/forward (POP) restores the exact previous scroll
+  instantly and does **not** replay entrances (`lib/useScrollRestoration.js`,
+  retries until async pages are tall enough). `history.scrollRestoration = manual`.
+- **Bespoke select** — native `<select>` replaced everywhere with an accessible
+  listbox/combobox (`components/Select.jsx`): ↑/↓ · Home/End · Enter/Space · Esc ·
+  type-ahead · outside-click, `aria-activedescendant`, focus-visible.
+- **Dialogs done right** — bottom sheets now trap focus, take initial focus,
+  close on Esc, and **return focus to the trigger** on close (captured at render
+  time so a child `autoFocus` can't steal it; refocus retried past React's churn).
+- **Signature reactive moment** — the dashboard hero tilts toward the cursor with
+  a damped spring and a tracking light, gated to real pointers, idle loop stops
+  (`lib/useTilt.js`).
+- **Invisible details** — focus-visible rings on every control, `text-wrap:balance`
+  on headings, ≥44px touch targets on coarse pointers.
+- SW cache -> v1.6.0.
+
 ## v1.5.0 — Expressive animations (2026-06-16)
 
 Material 3 Expressive motion pass across the app (all `prefers-reduced-motion` aware):

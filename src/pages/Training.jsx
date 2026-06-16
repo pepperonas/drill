@@ -3,6 +3,7 @@ import { api } from '../api/client.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { Sheet } from '../components/Sheet.jsx';
+import { Select } from '../components/Select.jsx';
 import { WORKOUT_CATEGORIES, fmtDayLong } from '../lib/util.js';
 
 const emptySet = () => ({ exercise: '', weight: '', reps: '' });
@@ -108,9 +109,10 @@ export default function Training() {
         </div>
         <label className="field"><span>Kategorie</span>
           <div className="row" style={{ gap: 8 }}>
-            <select className="input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <div style={{ flex: 1 }}>
+              <Select ariaLabel="Kategorie" value={form.category} onChange={(v) => setForm({ ...form, category: v })}
+                options={categories.map((c) => ({ value: c, label: c }))} />
+            </div>
             <button type="button" className="btn outline" style={{ flex: '0 0 auto' }} onClick={addCategory}>+ Eigene</button>
           </div>
         </label>

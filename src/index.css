@@ -239,6 +239,67 @@ button { font-family: inherit; }
 .skeleton { background: linear-gradient(90deg, var(--surface-container), var(--surface-container-high), var(--surface-container)); background-size: 200% 100%; animation: shimmer 1.3s infinite; border-radius: var(--shape-lg); }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
+/* ---- Custom select (bespoke listbox over native defaults) ---- */
+.sel { position: relative; }
+.sel-trigger {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: var(--surface-container-high); color: var(--on-surface);
+  border: 1.5px solid var(--outline-variant); border-radius: var(--shape-md);
+  padding: 14px 16px; font: inherit; font-size: 1rem; cursor: pointer; text-align: left;
+  transition: border-color var(--dur-short) var(--ease-effects);
+}
+.sel-trigger:hover { border-color: var(--outline); }
+.sel-placeholder { color: var(--on-surface-variant); }
+.sel-caret { color: var(--on-surface-variant); transition: transform var(--dur-short) var(--ease-spatial); }
+.sel-caret.open { transform: rotate(180deg); }
+.sel-pop {
+  position: absolute; z-index: 50; top: calc(100% + 6px); left: 0; right: 0; margin: 0; padding: 6px;
+  list-style: none; background: var(--surface-container-high); border: 1px solid var(--outline-variant);
+  border-radius: var(--shape-md); box-shadow: var(--elev-3); max-height: 264px; overflow-y: auto;
+  animation: selPop var(--dur-short) var(--ease-spatial);
+}
+@keyframes selPop { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+.sel-opt {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 11px 12px; border-radius: var(--shape-sm); cursor: pointer; font-size: .95rem;
+  color: var(--on-surface);
+}
+.sel-opt.active { background: var(--surface-container-highest); }
+.sel-opt.selected { color: var(--primary); font-weight: 650; }
+
+/* ---- Focus-visible rings on every interactive surface (blueprint §6/§8) ---- */
+.btn:focus-visible, .chip:focus-visible, .nav-item:focus-visible, .sel-trigger:focus-visible,
+.avatar:focus-visible, a:focus-visible, [role="switch"]:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 2px;
+}
+.input:focus-visible, select.input:focus-visible, textarea.input:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 1px; border-color: var(--primary);
+}
+
+/* ---- Headlines wrap evenly; no orphans ---- */
+.display, .headline, .title { text-wrap: balance; }
+
+/* ---- Reactive focal card: cursor tilt + tracking light (desktop pointers) ---- */
+.tilt {
+  position: relative;
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d; will-change: transform;
+}
+.tilt::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%),
+    color-mix(in srgb, var(--primary) 16%, transparent), transparent 60%);
+  opacity: 0; transition: opacity var(--dur-medium) var(--ease-effects);
+}
+@media (hover: hover) and (pointer: fine) {
+  .tilt:hover::after { opacity: 1; }
+}
+
+/* ---- Touch targets ≥44px on coarse pointers ---- */
+@media (pointer: coarse) {
+  .btn, .nav-item, .chip, .sel-trigger { min-height: 44px; }
+}
+
 /* ============================================================================
    Animations — deliberately visible, spring-flavoured (M3 Expressive motion).
 ============================================================================ */
@@ -262,51 +323,51 @@ body, .card, .tile, .badge, .navbar-inner, .nav-item, .chip, .input, .topbar, .p
   100% { opacity: 0;  transform: scale(1.6); }
 }
 
-/* Page transition on route change (wrapper keyed by pathname). */
-.page { animation: pageIn var(--dur-long) var(--ease-spatial) both; }
+/* Page transition — entrance plays only on forward navigation (PUSH/REPLACE).
+   On back/forward (POP) the page is shown already in place (see useScrollRestoration). */
+.page-anim { animation: pageIn var(--dur-long) var(--ease-spatial) both; }
 @keyframes pageIn {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: none; }
 }
 
-/* Staggered entrance for cards / tiles / badges. */
-.card, .tile, .badge { animation: riseIn var(--dur-medium) var(--ease-spatial) both; }
+/* Staggered entrance for cards / tiles / badges (forward navigation only). */
+.page-anim .card, .page-anim .tile, .page-anim .badge { animation: riseIn var(--dur-medium) var(--ease-spatial) both; }
 @keyframes riseIn {
   from { opacity: 0; transform: translateY(14px) scale(.97); }
   to   { opacity: 1; transform: none; }
 }
-.grid > *:nth-child(1) { animation-delay: .03s; }
-.grid > *:nth-child(2) { animation-delay: .08s; }
-.grid > *:nth-child(3) { animation-delay: .13s; }
-.grid > *:nth-child(4) { animation-delay: .18s; }
-.grid > *:nth-child(5) { animation-delay: .23s; }
-.grid > *:nth-child(6) { animation-delay: .28s; }
-.grid > *:nth-child(7) { animation-delay: .33s; }
-.grid > *:nth-child(8) { animation-delay: .38s; }
+.page-anim .grid > *:nth-child(1) { animation-delay: .03s; }
+.page-anim .grid > *:nth-child(2) { animation-delay: .08s; }
+.page-anim .grid > *:nth-child(3) { animation-delay: .13s; }
+.page-anim .grid > *:nth-child(4) { animation-delay: .18s; }
+.page-anim .grid > *:nth-child(5) { animation-delay: .23s; }
+.page-anim .grid > *:nth-child(6) { animation-delay: .28s; }
+.page-anim .grid > *:nth-child(7) { animation-delay: .33s; }
+.page-anim .grid > *:nth-child(8) { animation-delay: .38s; }
 
-/* Streak ring pops in; FAB springs up; level bar shimmer on the fill. */
-.ring-wrap > div:first-child { animation: ringPop var(--dur-long) var(--ease-spatial) both; }
+/* Streak ring pops in; FAB springs up (forward navigation only). */
+.page-anim .ring-wrap > div:first-child { animation: ringPop var(--dur-long) var(--ease-spatial) both; }
 @keyframes ringPop {
   from { opacity: 0; transform: scale(.6) rotate(-12deg); }
   to   { opacity: 1; transform: none; }
 }
-.fab { animation: fabIn var(--dur-long) var(--ease-spatial) both; }
+.page-anim .fab { animation: fabIn var(--dur-long) var(--ease-spatial) both; }
 @keyframes fabIn {
   0%   { opacity: 0; transform: translateY(40px) scale(.7); }
   60%  { opacity: 1; }
   100% { transform: none; }
 }
-.progress-fill { position: relative; overflow: hidden; }
-.progress-fill::after {
+.progress-fill { position: relative; overflow: hidden; transform-origin: left center; }
+/* Grow + shine only on forward navigation (scaleX keeps the inline width %). */
+.page-anim .progress-fill { animation: barGrow var(--dur-long) var(--ease-spatial) both; }
+@keyframes barGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.page-anim .progress-fill::after {
   content: ''; position: absolute; inset: 0;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent);
-  transform: translateX(-100%); animation: barShine 2.2s var(--ease-effects) 2;
+  transform: translateX(-100%); animation: barShine 2.2s var(--ease-effects) .4s 2;
 }
 @keyframes barShine { to { transform: translateX(100%); } }
-
-/* Progress bars grow in from the left on mount (scaleX keeps the inline width %). */
-.progress-fill { transform-origin: left center; animation: barGrow var(--dur-long) var(--ease-spatial) both; }
-@keyframes barGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* Touch ripple (Material signature) — ink expands from the press point. */
 .btn, .chip, .nav-item, .fab, .tile, .card.tap { overflow: hidden; }

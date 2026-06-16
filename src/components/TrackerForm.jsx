@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { TYPES, CATEGORIES, GOAL_DIRECTIONS, COLORS, ICONS, TEMPLATES } from '../lib/trackerTypes.js';
+import { Select } from './Select.jsx';
 
 /** Renders the correct entry input for a tracker type. Controlled via value/onChange. */
 export function EntryInput({ tracker, value, onChange, autoFocus }) {
@@ -135,10 +136,8 @@ export function TrackerForm({ initial, onSave, onCancel, busy }) {
             <input className="input" type="number" value={f.goal_value} onChange={(e) => set('goal_value', e.target.value)} />
           </label>
           <label className="field"><span>Richtung</span>
-            <select className="input" value={f.goal_direction} onChange={(e) => set('goal_direction', e.target.value)}>
-              <option value="">—</option>
-              {GOAL_DIRECTIONS.map((g) => <option key={g.key} value={g.key}>{g.label}</option>)}
-            </select>
+            <Select ariaLabel="Zielrichtung" value={f.goal_direction || ''} onChange={(v) => set('goal_direction', v)}
+              options={[{ value: '', label: '—' }, ...GOAL_DIRECTIONS.map((g) => ({ value: g.key, label: g.label }))]} />
           </label>
         </div>
       )}

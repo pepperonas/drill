@@ -4,6 +4,7 @@ import { api } from '../api/client.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { CountUp, useCountUp } from '../components/CountUp.jsx';
+import { useTilt } from '../lib/useTilt.js';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -11,6 +12,7 @@ export default function Dashboard() {
   const nav = useNavigate();
   const [data, setData] = useState(null);
   const [busy, setBusy] = useState(false);
+  const heroRef = useTilt({ max: 5 });
 
   const load = useCallback(async () => { setData(await api.dashboard()); }, []);
   useEffect(() => { load(); }, [load]);
@@ -36,8 +38,8 @@ export default function Dashboard() {
         <div className="headline">{(user?.name || '').split(' ')[0] || 'Athlet'} 👋</div>
       </div>
 
-      {/* Level + streak hero */}
-      <div className="card" style={{ background: 'var(--surface-container-high)' }}>
+      {/* Level + streak hero — the reactive signature moment */}
+      <div className="card tilt" ref={heroRef} style={{ background: 'var(--surface-container-high)' }}>
         <div className="ring-wrap">
           <StreakRing value={data.streak.current} />
           <div style={{ flex: 1 }}>

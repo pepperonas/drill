@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, ScatterChart, Scatter, XAxis, YAxis, Tooltip, CartesianGrid, ZAxis } from 'recharts';
 import { api } from '../api/client.js';
 import { tooltipStyle } from './Dashboard.jsx';
+import { Select } from '../components/Select.jsx';
 
 const RANGES = [['30', '30T'], ['90', '90T'], ['365', '1J'], ['all', 'Alles']];
 
@@ -48,14 +49,12 @@ export default function Insights() {
         <div className="body" style={{ marginBottom: 14 }}>Vergleiche zwei Tracker und entdecke Zusammenhänge — z. B. Schlaf vs. Stimmung oder Kalorien vs. Gewicht.</div>
         <div className="row">
           <label className="field"><span>Tracker A</span>
-            <select className="input" value={a} onChange={(e) => setA(e.target.value)}>
-              {trackers.map((t) => <option key={t.id} value={t.id}>{t.icon} {t.name}</option>)}
-            </select>
+            <Select ariaLabel="Tracker A" value={a} onChange={setA}
+              options={trackers.map((t) => ({ value: String(t.id), label: `${t.icon || ''} ${t.name}` }))} />
           </label>
           <label className="field"><span>Tracker B</span>
-            <select className="input" value={b} onChange={(e) => setB(e.target.value)}>
-              {trackers.map((t) => <option key={t.id} value={t.id}>{t.icon} {t.name}</option>)}
-            </select>
+            <Select ariaLabel="Tracker B" value={b} onChange={setB}
+              options={trackers.map((t) => ({ value: String(t.id), label: `${t.icon || ''} ${t.name}` }))} />
           </label>
         </div>
         <div className="chips">

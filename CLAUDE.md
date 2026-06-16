@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Design concept
+
+The guiding metaphor (apply it as a filter for any UI change): **"a heads-up control room
+for your training — every metric a dial, every action a satisfying mechanical response."**
+Dark surfaces, glowing accent, springy/mechanical motion, tactile feedback (ripple), gauges
+that spin up (count-up). Restraint over noise.
+
 ## What this is
 
 `drill` (drill.celox.io) — a multitenant fitness/body-tracking PWA. Users sign in with Google,
@@ -86,6 +93,12 @@ the session cookie's `secure` flag is auto-relaxed so http login works.
   (route `/stats`) renders it with Recharts; the heatmap reuses `.hm-cell` (theme-aware via `color-mix`).
   Note: Recharts `ResponsiveContainer` collapses under Playwright fullPage capture — screenshot with a
   tall fixed viewport instead.
+- **Navigation craft**: `lib/useScrollRestoration.js` takes over scroll (manual mode) — POP
+  restores the saved position (retrying until async pages grow tall enough) and the entrance
+  animation is gated to non-POP via the `.page-anim` class. Native `<select>` is replaced by the
+  accessible `components/Select.jsx`; `components/Sheet.jsx` is a focus-trapping dialog that returns
+  focus to its trigger (captured at render time before child `autoFocus`, refocus retried). The
+  dashboard hero uses `lib/useTilt.js` (damped cursor tilt, desktop pointers only, idle loop stops).
 - **Days are timezone-local strings** (`YYYY-MM-DD` in the user's tz, `server/time.js`) so streaks
   and "today" match the user's wall clock, not UTC. The client reports its tz to `/api/me` on load.
 - **Metrics are generic** (`metrics` table: kind/value/unit/day) — adding a new body measurement is a
