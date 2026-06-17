@@ -122,6 +122,25 @@ test('rebuildXp self-heals an inflated ledger to ground truth', () => {
   assert.equal(u.last_checkin_day, '2026-06-14');
 });
 
+test('rebuildXp re-derives XP from check-ins, workouts, nutrition, entries and achievements', () => {
+  const db = openDb(':memory:');
+  const u = freshUser(db);
+  const now = 1;
+  db.upsertCheckin.get({ user_id: u.id, day: '2026-01-01', kind: 'gym', note: null, now });
+  db.insertWorkout.get({ user_id: u.id, day: '2026-01-01', category: 'Push', title: null, duration_min: 60, note: null, now });
+  db.upsertNutrition.get({ user_id: u.id, day: '2026-01-01', kcal: 2000, protein_g: 150, carbs_g: 200, fat_g: 60, quality: 4, water_ml: 2000, note: null, now });
+  const t = db.insertTracker.get({
+    user_id: u.id, name: 'Gewicht', type: 'number', unit: 'kg', icon: null, color: null, category: 'body',
+    options: null, goal_value: null, goal_direction: null, scale_min: null, scale_max: null, xp: 10, reminder_time: null, sort: 0, now,
+  });
+  db.insertEntry.run({ tracker_id: t.id, value: 80, text_value: null, day: '2026-01-01', note: null, now });
+  db.insertAchievement.run(u.id, 'first_checkin', now); // bonus 20
+
+  const r = rebuildXp(db, u);
+  // checkin 25 + streak bonus 5 + workout 40 + nutrition 15 + entry 10 + achievement 20 = 115
+  assert.equal(r.xp, 115);
+});
+
 test('progress percentage stays within 0..100', () => {
   for (const xp of [0, 1, 99, 100, 500, 5000]) {
     const p = levelProgress(xp);

@@ -80,9 +80,9 @@ Eine multitenant Fitness- & Körper-Tracking-PWA mit Google-Login, Charts, Gamif
 
 ### Datenmodell (Auszug)
 
-`users` · **`trackers`** (frei definierte Tracker) + **`tracker_entries`** · **`user_options`** (editierbare Picker) · **`personal_records`** · **`streak_freeze`** (Konfig + Stand) + **`freeze_events`** (Ledger) · `checkins` · `workouts` + `workout_sets` · `nutrition_logs` · `metrics` *(legacy, migriert in `trackers`)* · `xp_events` · `user_achievements` · `email_prefs` · `email_log`
+`users` *(inkl. `theme`)* · **`trackers`** (frei definierte Tracker) + **`tracker_entries`** · **`user_options`** (editierbare Picker) · **`personal_records`** · **`streak_freeze`** (Konfig + Stand) + **`freeze_events`** (Ledger) · `checkins` · `workouts` + `workout_sets` · `nutrition_logs` · `metrics` *(legacy, migriert in `trackers`)* · `xp_events` *(mit Quell-`ref` für reversible XP)* · `user_achievements` · `email_prefs` · `email_log`
 
-Migrationen sind append-only (`server/migrations.js`); `002_trackers` legt das Tracker-System an und überführt bestehende `metrics`-Werte verlustfrei in Tracker der Kategorie *body*; `003_streak_freeze` ergänzt den konfigurierbaren Streak-Schutz; `004_xp_ref` macht XP rückgängig-fähig.
+Migrationen sind append-only (`server/migrations.js`): `002_trackers` legt das Tracker-System an und überführt bestehende `metrics`-Werte verlustfrei in Tracker der Kategorie *body*; `003_streak_freeze` ergänzt den konfigurierbaren Streak-Schutz; `004_xp_ref` macht XP rückgängig-fähig; `005_user_theme` speichert das gewählte Theme pro Account.
 
 ### API-Überblick (Auszug, alles unter `/api`)
 
@@ -96,9 +96,11 @@ Migrationen sind append-only (`server/migrations.js`); `002_trackers` legt das T
 | `GET/POST /options/:domain`, `DELETE /options/:id` | editierbare Picker (`activity`, `workout_category`) |
 | `GET /records` · `GET /exercises` | Personal Records · Übungs-Bibliothek |
 | `GET/PUT /streak-freeze` | Streak-Schutz lesen / konfigurieren (Wertung + Gestaltung) |
-| `GET /dashboard` · `GET /gamification` | Aggregate (Ziele, PRs, Level, Streak, Erfolge) |
+| `GET /dashboard` · `GET /gamification` · `GET /stats` | Aggregate (Ziele/PRs/Level/Streak · Erfolge · XP-Kurve/Heatmap/Radar) |
 | `POST /checkins` · `POST /workouts` · `POST /nutrition` | spezialisiertes Tracking (Streak / Sätze+PR / Makros) |
-| `GET /auth/google` · `GET /auth/callback` · `GET /me` | OAuth & Session |
+| `DELETE /checkins/:day` · `/workouts/:id` · `/entries/:id` | Rückgängig — zieht die vergebene XP wieder ab |
+| `GET/PUT /me` · `GET /export` · `DELETE /me` | Profil & Theme · DSGVO-Export · Konto löschen |
+| `GET /auth/google` · `GET /auth/callback` | Google-OAuth |
 
 ## 🚀 Lokale Entwicklung
 
@@ -122,13 +124,20 @@ npm run dev                   # http://localhost:5180  (proxyt /api -> :4252)
 ### Tests
 
 ```bash
-cd server && npm test         # node:test — 41 Tests
+cd server && npm test         # node:test — 66 Tests
 ```
-Abgedeckt: Gamification (Level-Kurve, Streaks, Achievements), Tracker-Logik (1RM, Ziel-Fortschritt,
-Korrelation/Pearson, gleitender Durchschnitt, Default-Seeding), **Streak-Freeze** (Überbrückung
-grow/preserve, Verdienst-Milestones idempotent, Wochengeschenk, ISO-Woche, Cap/Consume), DB-Flows
-(Einträge, PRs, Optionen, Cascade-Delete) und **API-Integrationstests**, die die App in-memory booten
-und Tracker- + Streak-Freeze-Endpunkte über HTTP mit Session-Cookie durchspielen.
+Abgedeckt:
+- **Gamification** — Level-Kurve, Streaks, Achievements, **reversible XP** (Undo zieht ab) & `rebuildXp`.
+- **Tracker-Logik** — 1RM, Ziel-Fortschritt, Korrelation/Pearson, gleitender Durchschnitt, Default-Seeding.
+- **Streak-Freeze** — Überbrückung grow/preserve, Verdienst-Milestones idempotent, Wochengeschenk,
+  ISO-Woche, Cap/Consume; plus **Cron-Auto-Bridge** (täglicher Freeze-Einsatz / Streak lapst ohne Schild).
+- **Analytics** — XP-Kurve (kumulativ), Heatmap, Wochen-Buckets, Balance-Radar, Kategorien, Level-Marker.
+- **Zeit-Mathematik** — `dayInTz`/`addDays`/`diffDays` über Monats-/Jahres-/Schaltjahr-Grenzen.
+- **Session-HMAC** — Roundtrip, Manipulations-/Ablauf-/Falschsecret-Erkennung.
+- **E-Mail-Templates** — HTML-Escaping (XSS), Confirm-/Unsubscribe-Links.
+- **Stats-/Rate-Limiter-Helfer** & **DB-Flows** (Einträge, PRs, Optionen, Cascade-Delete).
+- **API-Integrationstests** — App in-memory gebootet, Tracker- + Streak-Freeze-Endpunkte über HTTP mit
+  Session-Cookie (inkl. Undo zieht XP ab, Korrelation, PR-Erkennung).
 
 ## 📦 Build & Deploy
 

@@ -45,7 +45,7 @@ npm run build                   # -> dist/
 # backend
 cd server && npm install
 npm run dev                     # node --watch, http://127.0.0.1:4252
-npm test                        # node:test — gamification/streak/level logic
+npm test                        # node:test — 66 tests (logic, analytics, session, time, cron, email, API)
 ```
 
 Local dev needs `server/.env` (copy from `server/.env.example`). With `APP_ORIGIN=http://...`

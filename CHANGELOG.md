@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.6.5 — Expanded test suite & doc refresh (2026-06-17)
+
+_Internal — tests + docs only, nothing user-facing deploys._
+
+- Test suite grown from 42 to **66**. New unit tests for previously-uncovered
+  modules: time math (month/year/leap boundaries), session HMAC (tamper/expiry/
+  wrong-secret), analytics aggregation (xp curve, heatmap, radar, level markers),
+  email-template HTML escaping (XSS) + unsubscribe links, server stats helpers,
+  the rate limiter, the cron streak-freeze auto-bridge, and a full `rebuildXp`
+  derivation across all XP sources.
+- README refreshed: data model (`users.theme`, `xp_events.ref`), migrations
+  004/005, API table (`/stats`, undo endpoints, `/me`, export/delete), and the
+  test-coverage list.
+
 ## v1.6.4 — Mobile safe-area polish (2026-06-17)
 
 - Audited every page at 390px — no horizontal overflow; charts, heatmaps, sheets,
