@@ -31,12 +31,16 @@ button { font-family: inherit; }
   min-height: 100%;
   max-width: 880px;
   margin: 0 auto;
-  padding: 0 16px calc(96px + env(safe-area-inset-bottom)) 16px;
+  padding-top: 0;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
 }
 .topbar {
   position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; gap: 12px;
-  padding: 18px 4px 14px;
+  /* clear the notch / status bar when installed as a PWA */
+  padding: max(18px, calc(env(safe-area-inset-top) + 6px)) 4px 14px;
   background: linear-gradient(var(--background) 70%, transparent);
 }
 .brand { font-size: 1.5rem; font-weight: 850; letter-spacing: -.03em; color: var(--primary); }

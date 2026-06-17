@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.6.4 — Mobile safe-area polish (2026-06-17)
+
+- Audited every page at 390px — no horizontal overflow; charts, heatmaps, sheets,
+  badge grid and bottom nav all render cleanly. The one real gap was the top
+  safe-area: the header now clears the notch / status bar via
+  `env(safe-area-inset-top)`, and the app container respects left/right insets.
+- Added iOS PWA fullscreen metas (`apple-mobile-web-app-capable`,
+  `status-bar-style: black-translucent`) so an installed icon launches edge-to-edge
+  with the header correctly inset. No change on non-notched/desktop (insets → 0).
+- SW cache -> v1.6.4.
+
 ## v1.6.3 — Cursor-following glow on widgets (2026-06-16)
 
 - A highlight glow now follows the cursor across all widget cards/tiles, with a
