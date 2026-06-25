@@ -45,7 +45,7 @@ npm run build                   # -> dist/
 # backend
 cd server && npm install
 npm run dev                     # node --watch, http://127.0.0.1:4252
-npm test                        # node:test — 66 tests (logic, analytics, session, time, cron, email, API)
+npm test                        # node:test — 71 tests (logic, analytics, session, time, cron, email, API)
 ```
 
 Local dev needs `server/.env` (copy from `server/.env.example`). With `APP_ORIGIN=http://...`
@@ -63,6 +63,21 @@ the session cookie's `secure` flag is auto-relaxed so http login works.
   check-in/workout lists user-extensible. Frontend merges built-in defaults with these.
 - **Personal records**: `personal_records` (one best est-1RM per exercise); `detectPRs` in
   `routes/tracking.js` runs on every workout POST and returns new PRs so the UI can celebrate.
+- **Workouts have a `place`** (`gym`/`home`/`outdoor`/null, migration `006`, validated in
+  `routes/tracking.js`) to support a frictionless at-home flow. The gym-centric form gains a place
+  selector, one-tap quick-start templates and a **bodyweight mode** (hides the kg field → sets are
+  exercise + reps only); presets + the home exercise library live in `src/lib/workoutTemplates.js`.
+  Weightless sets never produce a PR (`detectPRs` skips `!weight || !reps`), so bodyweight logging is
+  safe. The place is purely additive — legacy/unspecified workouts have `place = null`.
+- **Set rows carry a `set_count`** (migration `007`) so one row = N identical sets; weight + reps are
+  optional on every row (max flexibility — "3 sets × 12 reps, no weight" is valid). `sumVolume`
+  multiplies by `set_count`.
+- **Workout intensity** (`trackers.workoutIntensity`, stored on `workouts.intensity`) blends tonnage
+  (Σ count·reps·weight) + rep-work (Σ count·reps) + set volume (Σ count) into one score, so *any*
+  workout — weighted or bodyweight — is measurable. Workout XP = `XP.workout` (40 base) +
+  `intensityXp(points)` (capped at `INTENSITY_XP_CAP` = 120), awarded under reason `workout_intensity`
+  with the same `ref` (`workout:<id>`) so undo reverses both and `rebuildXp` re-derives it from the
+  stored sets.
 - **Legacy `metrics`** table is migrated into `trackers` by migration `002_trackers` (category `body`)
   and otherwise unused by the UI — don't add new features to it.
 - **Streak-freeze** (`server/streakfreeze.js`, `routes/streakfreeze.js`, tables `streak_freeze` +

@@ -66,13 +66,13 @@ export function openDb(path) {
 
     // workouts
     insertWorkout: db.prepare(`
-      INSERT INTO workouts (user_id, day, category, title, duration_min, note, created_at)
-      VALUES (@user_id, @day, @category, @title, @duration_min, @note, @now)
+      INSERT INTO workouts (user_id, day, category, title, duration_min, place, intensity, note, created_at)
+      VALUES (@user_id, @day, @category, @title, @duration_min, @place, @intensity, @note, @now)
       RETURNING *
     `),
     insertSet: db.prepare(`
-      INSERT INTO workout_sets (workout_id, exercise, weight, reps, sort)
-      VALUES (@workout_id, @exercise, @weight, @reps, @sort)
+      INSERT INTO workout_sets (workout_id, exercise, weight, reps, set_count, sort)
+      VALUES (@workout_id, @exercise, @weight, @reps, @set_count, @sort)
     `),
     listWorkouts: db.prepare(
       'SELECT * FROM workouts WHERE user_id = ? ORDER BY day DESC, id DESC LIMIT ?'),
@@ -81,7 +81,7 @@ export function openDb(path) {
     deleteWorkout: db.prepare('DELETE FROM workouts WHERE id = ? AND user_id = ?'),
     countWorkouts: db.prepare('SELECT COUNT(*) n FROM workouts WHERE user_id = ?'),
     sumVolume: db.prepare(`
-      SELECT COALESCE(SUM(s.weight * s.reps), 0) v
+      SELECT COALESCE(SUM(s.weight * s.reps * COALESCE(s.set_count, 1)), 0) v
       FROM workout_sets s JOIN workouts w ON w.id = s.workout_id
       WHERE w.user_id = ?`),
 

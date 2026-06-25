@@ -285,4 +285,21 @@ const MIGRATIONS = [
   ['005_user_theme', `
     ALTER TABLE users ADD COLUMN theme TEXT;
   `],
+
+  // 006: where a workout happened — 'gym' | 'home' | 'outdoor' | null. Lets the
+  // app offer a frictionless at-home / bodyweight logging flow and distinguish
+  // training locations. NULL = legacy/unspecified.
+  ['006_workout_place', `
+    ALTER TABLE workouts ADD COLUMN place TEXT;
+  `],
+
+  // 007: maximum input flexibility + per-workout intensity score.
+  //  - workout_sets.set_count: log "3 sets × 12 reps" as ONE row (weight stays
+  //    optional), instead of three identical rows.
+  //  - workouts.intensity: a computed score (tonnage + rep-work + set volume,
+  //    see trackers.workoutIntensity) that drives a bonus-XP reward per workout.
+  ['007_set_count_intensity', `
+    ALTER TABLE workout_sets ADD COLUMN set_count INTEGER NOT NULL DEFAULT 1;
+    ALTER TABLE workouts ADD COLUMN intensity INTEGER;
+  `],
 ];

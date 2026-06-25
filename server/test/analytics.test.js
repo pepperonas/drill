@@ -23,7 +23,7 @@ test('computeStats builds xp curve, heatmap, radar, weekly and categories', () =
 
   db.upsertCheckin.get({ user_id: u.id, day: today, kind: 'gym', note: null, now: 1 });
   db.upsertCheckin.get({ user_id: u.id, day: d(-1), kind: 'gym', note: null, now: 1 });
-  db.insertWorkout.get({ user_id: u.id, day: d(-1), category: 'Push', title: null, duration_min: 60, note: null, now: 1 });
+  db.insertWorkout.get({ user_id: u.id, day: d(-1), category: 'Push', title: null, duration_min: 60, place: null, intensity: null, note: null, now: 1 });
   const t = db.insertTracker.get({
     user_id: u.id, name: 'Gewicht', type: 'number', unit: 'kg', icon: null, color: null,
     category: 'body', options: null, goal_value: null, goal_direction: null,

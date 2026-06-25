@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { openDb } from '../db.js';
 import {
   est1RM, goalProgress, alignSeries, pearson, movingAverage,
-  seedDefaultsIfEmpty, DEFAULT_TRACKERS,
+  seedDefaultsIfEmpty, DEFAULT_TRACKERS, workoutIntensity, intensityXp, INTENSITY_XP_CAP,
 } from '../trackers.js';
 
 function freshUser(db) {
@@ -27,6 +27,37 @@ test('est1RM uses Epley and handles edge cases', () => {
   assert.equal(est1RM(100, 10), 133.3);
   assert.equal(est1RM(0, 5), 0);
   assert.equal(est1RM(80, 0), 0);
+});
+
+test('workoutIntensity combines set count, reps and weight', () => {
+  // weighted: 3 sets × 10 reps × 50 kg = 1500 kg tonnage, 30 reps, 3 sets
+  const weighted = workoutIntensity([{ setCount: 3, reps: 10, weight: 50 }]);
+  assert.equal(weighted.tonnage, 1500);
+  assert.equal(weighted.reps, 30);
+  assert.equal(weighted.sets, 3);
+  // points = 1500/150 + 30/10 + 3*0.5 = 10 + 3 + 1.5 = 14.5 -> 15
+  assert.equal(weighted.points, 15);
+
+  // dumbbell sets logged WITHOUT a weight still score (reps + set volume)
+  const noWeight = workoutIntensity([{ setCount: 3, reps: 12 }]);
+  assert.equal(noWeight.tonnage, 0);
+  assert.equal(noWeight.reps, 36);
+  assert.equal(noWeight.sets, 3);
+  assert.ok(noWeight.points > 0, 'weightless sets still produce intensity');
+
+  // a hold (no reps, no weight) still counts its sets
+  assert.equal(workoutIntensity([{ setCount: 2, reps: null }]).sets, 2);
+  // empty / missing input is safe
+  assert.equal(workoutIntensity([]).points, 0);
+  assert.equal(workoutIntensity(undefined).points, 0);
+  // set_count (DB style) is accepted too, and is clamped to >= 1
+  assert.equal(workoutIntensity([{ set_count: 0, reps: 5 }]).sets, 1);
+});
+
+test('intensityXp clamps to the cap', () => {
+  assert.equal(intensityXp(15), 15);
+  assert.equal(intensityXp(-3), 0);
+  assert.equal(intensityXp(99999), INTENSITY_XP_CAP);
 });
 
 test('goalProgress: up direction', () => {

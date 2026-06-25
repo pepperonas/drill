@@ -100,6 +100,55 @@ test('workout logging detects a personal record', async () => {
   assert.ok(res.prs.length === 1 && res.prs[0].exercise === 'Bankdrücken');
 });
 
+test('a short bodyweight workout at home logs (no weights, no PR) and persists the place', async () => {
+  const res = await (await call('POST', '/api/workouts', {
+    day: '2026-04-01', category: 'Ganzkörper', title: 'Bodyweight', place: 'home', duration_min: 20,
+    sets: [{ exercise: 'Liegestütze', weight: null, reps: 12 }, { exercise: 'Plank', weight: null, reps: null }],
+  })).json();
+  assert.equal(res.workout.place, 'home');
+  assert.equal(res.workout.sets.length, 2);
+  assert.equal(res.workout.sets[0].weight, null);  // bodyweight = no weight stored
+  assert.ok((res.prs || []).length === 0, 'no PR from a weightless set');
+  assert.ok(res.gami.xp > 0, 'workout still awards XP');
+
+  // it comes back over GET with its place intact
+  const got = await (await call('GET', '/api/workouts?limit=10')).json();
+  assert.ok(got.workouts.some((w) => w.place === 'home' && w.title === 'Bodyweight'));
+});
+
+test('3 dumbbell sets with reps but NO weight: one row stands for N sets, scores intensity, awards bonus XP', async () => {
+  const user = db.upsertUser.get({ google_sub: 'inten-user', email: 'i@b.c', name: 'I', picture: null, now: 1700000000 });
+  const ck = 'drill_session=' + sign({ uid: user.id, exp: 9999999999 }, process.env.SESSION_SECRET);
+  const xp = async () => (await (await fetch(base + '/api/dashboard', { headers: { cookie: ck } })).json()).level.xp;
+
+  const before = await xp();
+  const res = await (await fetch(base + '/api/workouts', {
+    method: 'POST', headers: { cookie: ck, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      day: '2026-08-01', category: 'Oberkörper',
+      sets: [{ exercise: 'Kurzhantel-Curls', setCount: 3, reps: 12 }],  // weight omitted entirely
+    }),
+  })).json();
+
+  assert.equal(res.workout.sets.length, 1);          // ONE stored row...
+  assert.equal(res.workout.sets[0].set_count, 3);    // ...representing 3 sets
+  assert.equal(res.workout.sets[0].weight, null);    // no weight required
+  assert.equal(res.workout.intensity, res.intensity.points);
+  assert.ok(res.intensity.points > 0, 'reps + sets produce a score without weight');
+  assert.ok((res.prs || []).length === 0, 'no PR without weight');
+
+  // base workout XP (40) + the intensity bonus were both awarded
+  assert.equal(await xp() - before, 40 + res.intensity.xp);
+  assert.ok(res.intensity.xp > 0);
+});
+
+test('an invalid place is rejected (stored as null), not persisted verbatim', async () => {
+  const res = await (await call('POST', '/api/workouts', {
+    day: '2026-04-02', category: 'Cardio', place: 'mars', sets: [],
+  })).json();
+  assert.equal(res.workout.place, null);
+});
+
 test('stats endpoint returns visualization aggregates', async () => {
   const s = await (await call('GET', '/api/stats')).json();
   assert.ok(Array.isArray(s.xpCurve) && s.xpCurve.length > 0, 'xp curve present');

@@ -42,7 +42,9 @@ Eine multitenant Fitness- & Körper-Tracking-PWA mit Google-Login, Charts, Gamif
 - **🎯 Ziele & Bestleistungen** — Ziel-Fortschritt pro Tracker; **automatische Personal-Records** (Epley-1RM) im Training mit Glückwunsch.
 - **📈 Flexible Charts & Insights** — Zeitraum-Wahl (7T/30T/90T/1J/alles), gleitender Durchschnitt, **Korrelations-Analyse** zweier Tracker (Pearson-r + Scatter, z. B. Schlaf vs. Stimmung).
 - **📊 Motivierende Statistik-Seite** — kumulative **XP-Wachstumskurve** mit Level-Markern, **Aktivitäts-Heatmap** (Intensität = XP/Tag), **Wochen-Rhythmus** (Check-ins vs. Workouts), **Balance-Radar** über alle Lebensbereiche und **Trainings-Donut**.
-- **📅 Anwesenheit & Training** — täglicher Check-in mit 17-Wochen-Heatmap; Workouts mit Kategorie, Dauer und Sätzen (Übung · kg · Wdh.).
+- **📅 Anwesenheit & Training** — täglicher Check-in mit 17-Wochen-Heatmap; Workouts mit Ort (🏋️ Gym / 🏠 Zuhause / 🌳 Draußen), Kategorie, Dauer und Sätzen (Übung · kg · Wdh.).
+- **🏠 Training zuhause** — **Schnellstart-Vorlagen** (💪 Bodyweight · 🔥 HIIT · 🫀 Core · 🧘 Mobility · 🏃 Cardio) loggen in zwei Taps; **Körpergewicht-Modus** blendet das kg-Feld aus (nur Wiederholungen), plus Heim-Übungs-Bibliothek im Autocomplete.
+- **⚡ Trainings-Intensität** — maximale Eingabe-Flexibilität: eine Zeile = *N Sätze* (`Sätze`-Spalte), Gewicht überall optional (auch „3 Sätze × 12 Wdh." ohne Gewicht). Sätze, Wiederholungen & Gewichte werden zu einem **Intensitäts-Score** pro Training verrechnet — dafür gibt es **Bonus-XP** (40 Basis + Intensität, gedeckelt).
 - **🥗 Ernährung** — Kalorien & Makros **oder** einfache Tagesbewertung + Wasser.
 - **🎮 Volle Gamification** — XP pro Aktivität (pro Tracker einstellbar), Level-Kurve, Tages-**Streaks** mit Bonus, **29 freischaltbare Erfolge** inkl. erreichbarer Langzeit-Meilensteine (100-Tage-Serie, 365 Check-ins gesamt, Level 50, 500 t Volumen).
 - **🧊 Konfigurierbarer Streak-Schutz** — voll anpassbares „Streak-Freeze"-System: **Wertung** (max. Anzahl, Verdienst-Modi: pro Streak-Meilenstein / pro X Check-ins / Wochengeschenk / bei Level-Up, ob ein geschützter Tag die Serie *wachsen lässt* oder nur *erhält*, automatischer Einsatz) **und Gestaltung** (Name, Symbol, Farbe, Beschreibung). Verpasste Tage werden automatisch überbrückt, solange Schilde vorhanden sind.
@@ -80,9 +82,9 @@ Eine multitenant Fitness- & Körper-Tracking-PWA mit Google-Login, Charts, Gamif
 
 ### Datenmodell (Auszug)
 
-`users` *(inkl. `theme`)* · **`trackers`** (frei definierte Tracker) + **`tracker_entries`** · **`user_options`** (editierbare Picker) · **`personal_records`** · **`streak_freeze`** (Konfig + Stand) + **`freeze_events`** (Ledger) · `checkins` · `workouts` + `workout_sets` · `nutrition_logs` · `metrics` *(legacy, migriert in `trackers`)* · `xp_events` *(mit Quell-`ref` für reversible XP)* · `user_achievements` · `email_prefs` · `email_log`
+`users` *(inkl. `theme`)* · **`trackers`** (frei definierte Tracker) + **`tracker_entries`** · **`user_options`** (editierbare Picker) · **`personal_records`** · **`streak_freeze`** (Konfig + Stand) + **`freeze_events`** (Ledger) · `checkins` · `workouts` *(mit `place` + `intensity`)* + `workout_sets` *(mit `set_count`)* · `nutrition_logs` · `metrics` *(legacy, migriert in `trackers`)* · `xp_events` *(mit Quell-`ref` für reversible XP)* · `user_achievements` · `email_prefs` · `email_log`
 
-Migrationen sind append-only (`server/migrations.js`): `002_trackers` legt das Tracker-System an und überführt bestehende `metrics`-Werte verlustfrei in Tracker der Kategorie *body*; `003_streak_freeze` ergänzt den konfigurierbaren Streak-Schutz; `004_xp_ref` macht XP rückgängig-fähig; `005_user_theme` speichert das gewählte Theme pro Account.
+Migrationen sind append-only (`server/migrations.js`): `002_trackers` legt das Tracker-System an und überführt bestehende `metrics`-Werte verlustfrei in Tracker der Kategorie *body*; `003_streak_freeze` ergänzt den konfigurierbaren Streak-Schutz; `004_xp_ref` macht XP rückgängig-fähig; `005_user_theme` speichert das gewählte Theme pro Account; `006_workout_place` ergänzt den Trainings-Ort (Gym/Zuhause/Draußen); `007_set_count_intensity` ergänzt Sätze-pro-Zeile + den Intensitäts-Score.
 
 ### API-Überblick (Auszug, alles unter `/api`)
 
@@ -124,7 +126,7 @@ npm run dev                   # http://localhost:5180  (proxyt /api -> :4252)
 ### Tests
 
 ```bash
-cd server && npm test         # node:test — 66 Tests
+cd server && npm test         # node:test — 71 Tests
 ```
 Abgedeckt:
 - **Gamification** — Level-Kurve, Streaks, Achievements, **reversible XP** (Undo zieht ab) & `rebuildXp`.

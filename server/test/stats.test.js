@@ -30,7 +30,7 @@ test('rangeStats counts only within the window and computes weight delta', () =>
   db.upsertCheckin.get({ user_id: u.id, day: '2026-03-02', kind: 'gym', note: null, now: 1 });
   db.upsertCheckin.get({ user_id: u.id, day: '2026-03-05', kind: 'gym', note: null, now: 1 });
   db.upsertCheckin.get({ user_id: u.id, day: '2026-02-01', kind: 'gym', note: null, now: 1 }); // outside
-  db.insertWorkout.get({ user_id: u.id, day: '2026-03-03', category: 'Push', title: null, duration_min: 60, note: null, now: 1 });
+  db.insertWorkout.get({ user_id: u.id, day: '2026-03-03', category: 'Push', title: null, duration_min: 60, place: null, intensity: null, note: null, now: 1 });
   const w = db.insertTracker.get({
     user_id: u.id, name: 'weight', type: 'number', unit: 'kg', icon: null, color: null, category: 'body',
     options: null, goal_value: null, goal_direction: null, scale_min: null, scale_max: null, xp: 10, reminder_time: null, sort: 0, now: 1,

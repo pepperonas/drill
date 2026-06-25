@@ -7,6 +7,7 @@
  */
 import { dayInTz, addDays, diffDays } from './time.js';
 import { consumeFreeze, persistFreezeState } from './streakfreeze.js';
+import { workoutIntensity, intensityXp } from './trackers.js';
 
 export const XP = {
   checkin: 25,
@@ -135,9 +136,11 @@ export function rebuildXp(db, user) {
     prev = c.day;
   }
 
-  // workouts
+  // workouts: base reward + re-derived intensity bonus
   for (const w of db.listWorkouts.all(user.id, 100000)) {
     awardXp(db, user, XP.workout, 'workout', w.day, `workout:${w.id}`);
+    const bonus = intensityXp(workoutIntensity(db.listSets.all(w.id)).points);
+    if (bonus > 0) awardXp(db, user, bonus, 'workout_intensity', w.day, `workout:${w.id}`);
   }
   // tracker entries (each contributes its tracker's current xp)
   for (const e of db.allEntriesWithXp.all(user.id)) {

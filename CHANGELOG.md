@@ -1,5 +1,47 @@
 # Changelog
 
+## v1.8.0 — Flexible set entry + workout intensity score (2026-06-21)
+
+Maximum input flexibility, and every workout now earns points for how hard it was.
+
+- **Per-row set count** — log "3 Sätze × 12 Wdh" as a *single* row instead of three
+  identical ones (migration `007`, `workout_sets.set_count`). The set table gains a
+  **Sätze** column; the card renders it as `3 × 12 × 20 kg`.
+- **Weight is optional everywhere** — enter dumbbell sets with reps and no weight at
+  all (not just in bodyweight mode). The server normalizes empty/absent weights to
+  `null`; weightless sets never fabricate a PR.
+- **⚡ Intensity score per workout** (`trackers.workoutIntensity`, stored on
+  `workouts.intensity`): blends **tonnage** (Σ sets·reps·weight), **rep work**
+  (Σ sets·reps, so bodyweight counts) and **set volume** (Σ sets) into one number —
+  so *any* training entry is measurable. It’s shown on the card and in the save toast.
+- **Points for intensity** — the workout reward is now `40 base + intensity bonus`
+  (capped at 120, reason `workout_intensity`, same `ref` so undo reverses both and
+  `rebuildXp` re-derives it deterministically). Volume totals/achievements now
+  multiply by the set count too.
+- Tests at **71** (intensity math + clamp unit tests; an end-to-end "3 dumbbell sets,
+  no weight" API test asserting one stored row, a positive score and base+bonus XP).
+  SW cache -> v1.8.0.
+
+## v1.7.0 — Home & bodyweight workouts (2026-06-21)
+
+Logging a short session at home is now a first-class, two-tap flow (it was
+technically possible before, but the form was gym-centric: weight×reps sets and
+gym-split categories).
+
+- **Place selector** on every workout — 🏋️ Gym · 🏠 Zuhause · 🌳 Draußen
+  (migration `006_workout_place`; the place shows as an icon on each workout card
+  and is returned by the API). Picking a place sets a sensible bodyweight default.
+- **Quick-start templates** — one tap fills place, category, duration and a
+  starter set list: 💪 Bodyweight · 🔥 HIIT · 🫀 Core · 🧘 Mobility · 🏃 Cardio.
+  Log a home session in two taps (template → save).
+- **Bodyweight mode** — a toggle that drops the kg field entirely, so a no-equipment
+  session is just exercise + reps (or a hold). Weightless sets never spoof a PR,
+  and the workout still earns its XP.
+- **Home exercise library** merged into the set autocomplete (Liegestütze, Plank,
+  Burpees, Mountain Climbers, …) so bodyweight moves are quick to type.
+- Tests at **68** (new API coverage: home/bodyweight workout persists its place,
+  logs weightless sets without a PR, and rejects an invalid place). SW cache -> v1.7.0.
+
 ## v1.6.5 — Expanded test suite & doc refresh (2026-06-17)
 
 _Internal — tests + docs only, nothing user-facing deploys._

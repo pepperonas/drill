@@ -127,7 +127,7 @@ test('rebuildXp re-derives XP from check-ins, workouts, nutrition, entries and a
   const u = freshUser(db);
   const now = 1;
   db.upsertCheckin.get({ user_id: u.id, day: '2026-01-01', kind: 'gym', note: null, now });
-  db.insertWorkout.get({ user_id: u.id, day: '2026-01-01', category: 'Push', title: null, duration_min: 60, note: null, now });
+  db.insertWorkout.get({ user_id: u.id, day: '2026-01-01', category: 'Push', title: null, duration_min: 60, place: null, intensity: null, note: null, now });
   db.upsertNutrition.get({ user_id: u.id, day: '2026-01-01', kcal: 2000, protein_g: 150, carbs_g: 200, fat_g: 60, quality: 4, water_ml: 2000, note: null, now });
   const t = db.insertTracker.get({
     user_id: u.id, name: 'Gewicht', type: 'number', unit: 'kg', icon: null, color: null, category: 'body',

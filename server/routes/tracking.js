@@ -10,7 +10,7 @@ import {
   awardXp, recomputeStreak, checkAchievements, XP,
   reverseXpByRef, recomputeStreakFromHistory,
 } from '../gamification.js';
-import { est1RM } from '../trackers.js';
+import { est1RM, workoutIntensity, intensityXp } from '../trackers.js';
 import { ensureFreeze, reconcileEarn } from '../streakfreeze.js';
 
 /**
@@ -146,22 +146,41 @@ export function trackingRoutes(db, auth) {
   r.post('/workouts', (req, res) => {
     const b = req.body || {};
     const day = b.day || dayInTz(req.user.tz);
+    const place = ['gym', 'home', 'outdoor'].includes(b.place) ? b.place : null;
+    // Normalize sets: weight + reps are optional everywhere (max flexibility);
+    // set_count lets one row stand for N identical sets.
+    const sets = (Array.isArray(b.sets) ? b.sets : [])
+      .filter((s) => String(s && s.exercise || '').trim())
+      .map((s) => ({
+        exercise: String(s.exercise).slice(0, 80),
+        weight: s.weight == null || s.weight === '' ? null : Number(s.weight),
+        reps: s.reps == null || s.reps === '' ? null : Number(s.reps),
+        set_count: Math.min(99, Math.max(1, Math.round(Number(s.setCount ?? s.set_count ?? 1)) || 1)),
+      }));
+    const intensity = workoutIntensity(sets);
     const w = db.insertWorkout.get({
       user_id: req.user.id, day,
       category: b.category || null, title: b.title || null,
       duration_min: b.duration_min ? Number(b.duration_min) : null,
+      place, intensity: intensity.points,
       note: b.note || null, now: now(),
     });
-    const sets = Array.isArray(b.sets) ? b.sets : [];
     sets.forEach((s, i) => db.insertSet.run({
-      workout_id: w.id, exercise: String(s.exercise || '').slice(0, 80),
-      weight: s.weight != null ? Number(s.weight) : null,
-      reps: s.reps != null ? Number(s.reps) : null, sort: i,
+      workout_id: w.id, exercise: s.exercise,
+      weight: s.weight, reps: s.reps, set_count: s.set_count, sort: i,
     }));
+    // Base reward for training + a capped intensity bonus (same ref → one undo
+    // reverses both, and rebuildXp re-derives both deterministically).
     awardXp(db, req.user, XP.workout, 'workout', day, `workout:${w.id}`);
+    const bonus = intensityXp(intensity.points);
+    if (bonus > 0) awardXp(db, req.user, bonus, 'workout_intensity', day, `workout:${w.id}`);
     const newPRs = detectPRs(db, req.user, sets, day);
     const newly = checkAchievements(db, req.user, gamiCtx(db, req.user), day);
-    res.json({ workout: { ...w, sets: db.listSets.all(w.id) }, gami: gamiResult(db, req.user, newly), prs: newPRs });
+    res.json({
+      workout: { ...w, sets: db.listSets.all(w.id) },
+      gami: gamiResult(db, req.user, newly), prs: newPRs,
+      intensity: { ...intensity, xp: bonus },
+    });
   });
 
   r.delete('/workouts/:id', (req, res) => {

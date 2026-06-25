@@ -46,6 +46,39 @@ export function est1RM(weight, reps) {
   return Math.round(weight * (1 + reps / 30) * 10) / 10;
 }
 
+// Upper bound for how much a single workout's intensity can contribute as XP,
+// so a huge (or fat-fingered) session can't distort the level economy.
+export const INTENSITY_XP_CAP = 120;
+
+/**
+ * Combine a workout's sets into one intensity score. Each set row carries a set
+ * count (`setCount`/`set_count`, default 1), reps and an optional weight. The
+ * score blends three things so *any* workout is measurable:
+ *   - tonnage  = Σ count·reps·weight   (load — dominant for weighted training)
+ *   - rep work = Σ count·reps          (credits bodyweight / weightless sets)
+ *   - volume   = Σ count               (rewards just showing up and grinding sets)
+ * `points` is the headline number; weight is optional everywhere, so logging
+ * "3 sets × 12 reps" with no weight still produces a real score.
+ */
+export function workoutIntensity(sets) {
+  let tonnage = 0, reps = 0, totalSets = 0;
+  for (const s of sets || []) {
+    const n = Math.min(99, Math.max(1, Math.round(Number(s.setCount ?? s.set_count ?? 1)) || 1));
+    const r = Math.max(0, Number(s.reps) || 0);
+    const w = Math.max(0, Number(s.weight) || 0);
+    totalSets += n;
+    reps += n * r;
+    tonnage += n * r * w;
+  }
+  const points = Math.round(tonnage / 150 + reps / 10 + totalSets * 0.5);
+  return { tonnage: Math.round(tonnage), reps, sets: totalSets, points };
+}
+
+/** Clamp an intensity score to the XP it grants (0..INTENSITY_XP_CAP). */
+export function intensityXp(points) {
+  return Math.min(INTENSITY_XP_CAP, Math.max(0, Math.round(points) || 0));
+}
+
 /**
  * Goal progress for a tracker given its latest value. Returns null when the
  * tracker has no goal. `pct` is clamped 0..100; `reached` is a boolean.
