@@ -126,7 +126,7 @@ npm run dev                   # http://localhost:5180  (proxyt /api -> :4252)
 ### Tests
 
 ```bash
-cd server && npm test         # node:test — 71 Tests
+cd server && npm test         # node:test — 79 Tests
 ```
 Abgedeckt:
 - **Gamification** — Level-Kurve, Streaks, Achievements, **reversible XP** (Undo zieht ab) & `rebuildXp`.

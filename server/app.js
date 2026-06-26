@@ -39,12 +39,17 @@ export function createApp(db) {
     res.json({ id: u.id, email: u.email, name: u.name, picture: u.picture, tz: u.tz });
   });
 
-  // feature routers
+  // accountRoutes FIRST: it carries the *public* email confirm/unsubscribe
+  // endpoints (reachable from email links without a session). The other feature
+  // routers apply a blanket `requireUser`, so if they were mounted earlier they
+  // would 401 those public links before account routes could handle them.
+  app.use('/api', accountRoutes(db, auth));
+
+  // feature routers (each self-gates with requireUser)
   app.use('/api', trackingRoutes(db, auth));
   app.use('/api', trackerRoutes(db, auth));
   app.use('/api', streakFreezeRoutes(db, auth));
   app.use('/api', dashboardRoutes(db, auth));
-  app.use('/api', accountRoutes(db, auth));
 
   app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));
   return app;

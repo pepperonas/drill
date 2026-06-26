@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.8.2 — Public email links + expanded tests (2026-06-26)
+
+- **Fix: email confirm/unsubscribe links required a session.** Those endpoints are
+  meant to work straight from an email (e.g. opened on another device), but the
+  account router was mounted *after* the feature routers — whose blanket
+  `requireUser` 401'd the request first. Mounted accountRoutes first so the public
+  links work without being logged in. Caught by a new end-to-end test.
+- **8 new tests (71 → 79):** mixed weighted+bodyweight intensity & garbage-input
+  safety; `sumVolume` honoring `set_count`; `levelProgress` boundary fields;
+  `rebuildXp` re-deriving a workout's intensity bonus + tying it to one `ref`;
+  the per-day streak-bonus cap (50); the email confirm/unsubscribe endpoints; and
+  workout-delete reversing base **and** intensity XP. SW cache -> v1.8.2.
+
 ## v1.8.1 — Fix repeating email-confirm toast (2026-06-26)
 
 - The "✅ E-Mails bestätigt!" notice after confirming your email (and the

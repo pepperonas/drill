@@ -142,6 +142,26 @@ test('3 dumbbell sets with reps but NO weight: one row stands for N sets, scores
   assert.ok(res.intensity.xp > 0);
 });
 
+test('deleting a workout reverses both its base and its intensity XP', async () => {
+  const user = db.upsertUser.get({ google_sub: 'wdel-user', email: 'w@b.c', name: 'W', picture: null, now: 1700000000 });
+  const ck = 'drill_session=' + sign({ uid: user.id, exp: 9999999999 }, process.env.SESSION_SECRET);
+  const xp = async () => (await (await fetch(base + '/api/dashboard', { headers: { cookie: ck } })).json()).level.xp;
+
+  const before = await xp();
+  // weightless sets → no PR, so the only XP is base + intensity (cleanly reversible;
+  // a PR would unlock first_pr, whose bonus is intentionally NOT reversed on undo)
+  const res = await (await fetch(base + '/api/workouts', {
+    method: 'POST', headers: { cookie: ck, 'content-type': 'application/json' },
+    body: JSON.stringify({ day: '2026-09-01', category: 'Beine', sets: [{ exercise: 'Kniebeuge', setCount: 3, reps: 12 }] }),
+  })).json();
+  assert.ok(res.intensity.xp > 0);
+  assert.equal((res.prs || []).length, 0);
+  assert.equal(await xp() - before, 40 + res.intensity.xp);  // base + intensity awarded
+
+  await fetch(base + '/api/workouts/' + res.workout.id, { method: 'DELETE', headers: { cookie: ck } });
+  assert.equal(await xp(), before);                          // both reversed
+});
+
 test('an invalid place is rejected (stored as null), not persisted verbatim', async () => {
   const res = await (await call('POST', '/api/workouts', {
     day: '2026-04-02', category: 'Cardio', place: 'mars', sets: [],
@@ -172,6 +192,41 @@ test('streak-freeze config is readable and updatable', async () => {
   assert.equal(upd.config.name, 'Eisschild');
   assert.equal(upd.config.count_mode, 'grow');
   assert.equal(upd.config.max_freezes, 5);
+});
+
+test('email confirm link flips confirmed=1 (valid) and rejects a bad token', async () => {
+  const user = db.upsertUser.get({ google_sub: 'confirm-user', email: 'c@b.c', name: 'C', picture: null, now: 1700000000 });
+  const ck = 'drill_session=' + sign({ uid: user.id, exp: 9999999999 }, process.env.SESSION_SECRET);
+  // GET /me lazily creates the prefs row + its token
+  await fetch(base + '/api/me', { headers: { cookie: ck } });
+  const token = db.getPrefs.get(user.id).token;
+  assert.ok(token, 'a confirm token exists');
+  assert.equal(db.getPrefs.get(user.id).confirmed, 0);
+
+  // a bad token is rejected and changes nothing
+  const bad = await fetch(base + '/api/email/confirm?token=not-a-real-token', { redirect: 'manual' });
+  assert.equal(bad.status, 400);
+  assert.equal(db.getPrefs.get(user.id).confirmed, 0);
+
+  // the real token confirms the account (endpoint redirects → opaque to fetch)
+  const ok = await fetch(base + '/api/email/confirm?token=' + token, { redirect: 'manual' });
+  assert.ok(ok.status === 302 || ok.type === 'opaqueredirect', 'confirm redirects');
+  const me = await (await fetch(base + '/api/me', { headers: { cookie: ck } })).json();
+  assert.equal(me.prefs.confirmed, true);
+});
+
+test('unsubscribe link clears the email flags', async () => {
+  const user = db.upsertUser.get({ google_sub: 'unsub-user', email: 'un@b.c', name: 'U', picture: null, now: 1700000000 });
+  const ck = 'drill_session=' + sign({ uid: user.id, exp: 9999999999 }, process.env.SESSION_SECRET);
+  await fetch(base + '/api/me', { headers: { cookie: ck } });
+  const token = db.getPrefs.get(user.id).token;
+  // turn a flag on directly, then unsubscribe via the public link
+  db.upsertPrefs.get({ user_id: user.id, weekly: 1, streak_alert: 1, daily_nudge: 0, confirmed: 1, token, now: 1 });
+  const res = await fetch(base + '/api/email/unsubscribe?token=' + token, { redirect: 'manual' });
+  assert.ok(res.status === 302 || res.type === 'opaqueredirect');
+  const p = db.getPrefs.get(user.id);
+  assert.equal(p.weekly, 0);
+  assert.equal(p.streak_alert, 0);
 });
 
 test('undoing a check-in reverses its XP and recomputes the streak', async () => {

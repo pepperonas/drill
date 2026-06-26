@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { openDb } from '../db.js';
 import {
   xpForLevel, levelForXp, levelProgress, awardXp, recomputeStreak,
-  effectiveStreak, checkAchievements, reverseXpByRef, rebuildXp,
+  effectiveStreak, checkAchievements, reverseXpByRef, rebuildXp, XP,
 } from '../gamification.js';
+import { workoutIntensity, intensityXp } from '../trackers.js';
 
 function freshUser(db) {
   return db.upsertUser.get({
@@ -146,4 +147,47 @@ test('progress percentage stays within 0..100', () => {
     const p = levelProgress(xp);
     assert.ok(p.pct >= 0 && p.pct <= 100);
   }
+});
+
+test('levelProgress exposes correct level boundaries', () => {
+  // xpForLevel(2)=100, xpForLevel(3)=round(100*2^1.6)=303
+  const p = levelProgress(150);
+  assert.equal(p.level, 2);
+  assert.equal(p.levelXp, 50);          // 150 - 100
+  assert.equal(p.levelNeed, 203);       // 303 - 100
+  assert.equal(p.nextLevelXp, 303);
+  assert.equal(p.pct, 25);              // round(50/203*100)
+});
+
+test('rebuildXp re-derives a workout\'s intensity bonus and ties it to the same ref', () => {
+  const db = openDb(':memory:');
+  const u = freshUser(db);
+  const w = db.insertWorkout.get({
+    user_id: u.id, day: '2026-01-01', category: 'Beine', title: null,
+    duration_min: null, place: 'gym', intensity: null, note: null, now: 1,
+  });
+  db.insertSet.run({ workout_id: w.id, exercise: 'Kniebeuge', weight: 50, reps: 10, set_count: 3, sort: 0 });
+
+  const bonus = intensityXp(workoutIntensity(db.listSets.all(w.id)).points);
+  assert.equal(bonus, 15);                       // 1500/150 + 30/10 + 3*0.5 = 14.5 -> 15
+  const r = rebuildXp(db, u);
+  assert.equal(r.xp, XP.workout + bonus);         // 40 base + 15 intensity = 55
+
+  // base + intensity share `workout:<id>`, so one undo reverses both
+  reverseXpByRef(db, u, `workout:${w.id}`);
+  assert.equal(u.xp, 0);
+});
+
+test('rebuildXp caps the per-day streak bonus at 50', () => {
+  const db = openDb(':memory:');
+  const u = freshUser(db);
+  // 12 consecutive check-ins, no achievements unlocked
+  for (let d = 1; d <= 12; d++) {
+    db.upsertCheckin.get({ user_id: u.id, day: `2026-03-${String(d).padStart(2, '0')}`, kind: 'gym', note: null, now: d });
+  }
+  const r = rebuildXp(db, u);
+  // base 25*12 = 300; bonus days 1..10 = 5+10+...+50 = 275, days 11..12 capped = 50+50
+  // (uncapped would be 55+60); 275 + 100 = 375  ->  total 675
+  assert.equal(r.xp, 675);
+  assert.equal(u.streak_current, 12);
 });

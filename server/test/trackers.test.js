@@ -60,6 +60,23 @@ test('intensityXp clamps to the cap', () => {
   assert.equal(intensityXp(99999), INTENSITY_XP_CAP);
 });
 
+test('workoutIntensity sums a mixed weighted + bodyweight session', () => {
+  const it = workoutIntensity([
+    { set_count: 3, reps: 10, weight: 50 }, // tonnage 1500, 30 reps
+    { set_count: 3, reps: 15 },             // bodyweight: 45 reps, no tonnage
+  ]);
+  assert.equal(it.tonnage, 1500);
+  assert.equal(it.reps, 75);
+  assert.equal(it.sets, 6);
+  // 1500/150 + 75/10 + 6*0.5 = 10 + 7.5 + 3 = 20.5 -> 21
+  assert.equal(it.points, 21);
+  // garbage / negative inputs don't blow up or go negative
+  const safe = workoutIntensity([{ set_count: 2, reps: 'x', weight: -100 }]);
+  assert.equal(safe.tonnage, 0);
+  assert.equal(safe.reps, 0);
+  assert.equal(safe.sets, 2);
+});
+
 test('goalProgress: up direction', () => {
   const g = goalProgress({ goal_value: 100, goal_direction: 'up' }, 50);
   assert.equal(g.pct, 50);
@@ -142,6 +159,19 @@ test('personal records upsert keeps the better estimated 1RM', () => {
   pr = db.getPR.get(u.id, 'Bench');
   assert.equal(pr.weight, 95);
   assert.equal(db.listPRs.all(u.id).length, 1);
+});
+
+test('sumVolume multiplies weight × reps × set_count and ignores weightless sets', () => {
+  const db = openDb(':memory:');
+  const u = freshUser(db);
+  const w = db.insertWorkout.get({
+    user_id: u.id, day: '2026-01-01', category: 'Push', title: null,
+    duration_min: null, place: 'gym', intensity: null, note: null, now: 1,
+  });
+  db.insertSet.run({ workout_id: w.id, exercise: 'Bench', weight: 50, reps: 10, set_count: 3, sort: 0 }); // 1500
+  db.insertSet.run({ workout_id: w.id, exercise: 'Row', weight: 20, reps: 12, set_count: 2, sort: 1 });   // 480
+  db.insertSet.run({ workout_id: w.id, exercise: 'Plank', weight: null, reps: 20, set_count: 3, sort: 2 }); // 0
+  assert.equal(db.sumVolume.get(u.id).v, 1980);
 });
 
 test('user_options CRUD for editable pickers', () => {
