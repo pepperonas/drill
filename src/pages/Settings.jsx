@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { api } from '../api/client.js';
@@ -12,15 +13,29 @@ export default function Settings() {
   const { user, prefs, emailEnabled, logout, refresh } = useAuth();
   const { theme, themes, setTheme } = useTheme();
   const toast = useToast();
+  const loc = useLocation();
+  const nav = useNavigate();
+  const noticeShown = useRef(false);
   const [p, setP] = useState(prefs || { weekly: false, streak_alert: false, daily_nudge: false, confirmed: false });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { if (prefs) setP(prefs); }, [prefs]);
+
+  // One-shot notices from email confirm / unsubscribe redirects. Fire exactly
+  // once, then strip the query param: `toast` changes identity whenever a toast
+  // is shown (the provider re-renders), so without the ref guard + URL cleanup
+  // this effect would re-read the lingering `?confirmed=1` and loop endlessly.
   useEffect(() => {
-    const q = new URLSearchParams(location.search);
-    if (q.get('confirmed')) toast.show('✅ E-Mails bestätigt!');
-    if (q.get('unsubscribed')) toast.show('Abgemeldet.');
-  }, [toast]);
+    if (noticeShown.current) return;
+    const q = new URLSearchParams(loc.search);
+    const confirmed = q.get('confirmed');
+    const unsubscribed = q.get('unsubscribed');
+    if (!confirmed && !unsubscribed) return;
+    noticeShown.current = true;
+    if (confirmed) toast.show('✅ E-Mails bestätigt!');
+    if (unsubscribed) toast.show('Abgemeldet.');
+    nav('/settings', { replace: true });
+  }, [loc.search, toast, nav]);
 
   const savePrefs = async (next) => {
     setP(next);

@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.8.1 — Fix repeating email-confirm toast (2026-06-26)
+
+- The "✅ E-Mails bestätigt!" notice after confirming your email (and the
+  unsubscribe notice) fired **repeatedly** instead of once. The Settings effect
+  depended on `toast`, whose identity changes every time a toast is shown (the
+  provider re-renders) — so it re-read the still-present `?confirmed=1` from the
+  URL and looped. Now it fires exactly once (ref guard) and strips the one-shot
+  query param via the router so a remount can't re-show it. SW cache -> v1.8.1.
+
 ## v1.8.0 — Flexible set entry + workout intensity score (2026-06-21)
 
 Maximum input flexibility, and every workout now earns points for how hard it was.

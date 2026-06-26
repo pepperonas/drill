@@ -1,6 +1,6 @@
 {
   "name": "drill",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "drill.celox.io — fitness & body tracking PWA (React + Vite, Material 3 Expressive)",
   "private": true,
   "type": "module",
