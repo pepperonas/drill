@@ -13,3 +13,15 @@ server/data/
 .vite/
 .idea/
 .vscode/
+
+# Android app (android/) — build outputs + signing secrets (never commit)
+android/.gradle/
+android/.kotlin/
+android/build/
+android/app/build/
+android/local.properties
+android/captures/
+*.jks
+*.keystore
+keystore.properties
+secrets.txt

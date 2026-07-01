@@ -79,8 +79,9 @@ the session cookie's `secure` flag is auto-relaxed so http login works.
   with the same `ref` (`workout:<id>`) so undo reverses both and `rebuildXp` re-derives it from the
   stored sets.
 - **GPS activities + the native app** (`server/routes/activities.js`, migration `008`, table
-  `activities`). Uploaded by the **drill · go** Android app (`/Users/martin/claude/drill-go`, repo
-  `pepperonas/drill-go`). Route stored as an encoded polyline (precision 5); XP = `20 + 6/km` (capped
+  `activities`). Uploaded by the **drill · go** Android app, which lives in this same repo under
+  `android/` (Kotlin/Compose; build from `android/`, releases tagged `android-v*` →
+  `.github/workflows/android-release.yml`). Route stored as an encoded polyline (precision 5); XP = `20 + 6/km` (capped
   120, reversible via `activity:<id>`); an upload also registers an idempotent day check-in so it
   feeds the streak. Uploads are idempotent on `client_uuid`. The web renders them at `/activities`
   (MapLibre keyless map, lazy-loaded; SVG `RouteThumb` in the list).

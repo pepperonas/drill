@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- A route line that winds up to a pin — the "go" motif, in lime. -->
+    <path
+        android:strokeColor="#C6FF00"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M34,80 C34,66 52,68 52,56 C52,46 40,46 40,36 C40,27 50,26 58,30" />
+    <!-- start dot -->
+    <path android:fillColor="#6B7A00" android:pathData="M29,80 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 z" />
+    <!-- pin -->
+    <path android:fillColor="#C6FF00" android:pathData="M55,32 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0 z" />
+    <path android:fillColor="#14160F" android:pathData="M63,32 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 z" />
+</vector>
