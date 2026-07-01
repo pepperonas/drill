@@ -2,9 +2,11 @@
  * Google OAuth (authorization-code flow) without an SDK + session middleware.
  * ID tokens are verified via Google's tokeninfo endpoint (no JWKS handling).
  */
-import { randomBytes } from 'node:crypto';
+import { randomBytes, createHash } from 'node:crypto';
 import { config } from './config.js';
 import { sign, verify } from './session.js';
+
+const sha256 = (s) => createHash('sha256').update(String(s)).digest('hex');
 
 function cookieOpts(maxAgeSeconds) {
   return { httpOnly: true, secure: config.cookieSecure, sameSite: 'lax', path: '/', maxAge: maxAgeSeconds * 1000 };
@@ -12,13 +14,27 @@ function cookieOpts(maxAgeSeconds) {
 
 export function makeAuth(db) {
   function requireUser(req, res, next) {
-    const token = req.cookies[config.sessionCookie];
-    const payload = verify(token, config.sessionSecret);
-    if (!payload || !payload.uid) return res.status(401).json({ error: 'unauthenticated' });
-    const user = db.getUserById.get(payload.uid);
-    if (!user) return res.status(401).json({ error: 'user_gone' });
-    req.user = user;
-    next();
+    // 1) Browser session cookie (web app).
+    const payload = verify(req.cookies[config.sessionCookie], config.sessionSecret);
+    if (payload && payload.uid) {
+      const user = db.getUserById.get(payload.uid);
+      if (user) { req.user = user; return next(); }
+    }
+    // 2) Device bearer token (native app) — opaque token, matched by its hash.
+    const m = /^Bearer\s+(.+)$/i.exec(req.headers.authorization || '');
+    if (m) {
+      const dev = db.deviceByHash.get(sha256(m[1].trim()));
+      if (dev && !dev.revoked) {
+        const user = db.getUserById.get(dev.user_id);
+        if (user) {
+          db.touchDevice.run(Math.floor(Date.now() / 1000), dev.id);
+          req.user = user;
+          req.deviceId = dev.id;
+          return next();
+        }
+      }
+    }
+    return res.status(401).json({ error: 'unauthenticated' });
   }
 
   function startOAuth(req, res) {

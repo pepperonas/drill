@@ -45,7 +45,7 @@ npm run build                   # -> dist/
 # backend
 cd server && npm install
 npm run dev                     # node --watch, http://127.0.0.1:4252
-npm test                        # node:test — 79 tests (logic, analytics, session, time, cron, email, API)
+npm test                        # node:test — 90 tests (logic, analytics, session, time, cron, email, API, activities, pairing)
 ```
 
 Local dev needs `server/.env` (copy from `server/.env.example`). With `APP_ORIGIN=http://...`
@@ -78,6 +78,19 @@ the session cookie's `secure` flag is auto-relaxed so http login works.
   `intensityXp(points)` (capped at `INTENSITY_XP_CAP` = 120), awarded under reason `workout_intensity`
   with the same `ref` (`workout:<id>`) so undo reverses both and `rebuildXp` re-derives it from the
   stored sets.
+- **GPS activities + the native app** (`server/routes/activities.js`, migration `008`, table
+  `activities`). Uploaded by the **drill · go** Android app (`/Users/martin/claude/drill-go`, repo
+  `pepperonas/drill-go`). Route stored as an encoded polyline (precision 5); XP = `20 + 6/km` (capped
+  120, reversible via `activity:<id>`); an upload also registers an idempotent day check-in so it
+  feeds the streak. Uploads are idempotent on `client_uuid`. The web renders them at `/activities`
+  (MapLibre keyless map, lazy-loaded; SVG `RouteThumb` in the list).
+- **Device auth (pairing)** (`server/routes/pairing.js`, migration `009`). The web (Settings →
+  „Gerät koppeln") mints a short-lived single-use code; the app claims it (`POST /api/pairing/claim`,
+  public) for an opaque bearer token stored only as a SHA-256 hash in `device_tokens` (revocable).
+  `requireUser` (`server/auth.js`) accepts `Authorization: Bearer <token>` in addition to the session
+  cookie. `pairingRoutes` is mounted **before** the blanket-`requireUser` feature routers (like
+  `accountRoutes`) so the public claim endpoint is reachable. Shared `gamiCtx`/`gamiResult` moved to
+  `server/gami-helpers.js`.
 - **Legacy `metrics`** table is migrated into `trackers` by migration `002_trackers` (category `body`)
   and otherwise unused by the UI — don't add new features to it.
 - **Streak-freeze** (`server/streakfreeze.js`, `routes/streakfreeze.js`, tables `streak_freeze` +

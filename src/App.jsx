@@ -13,6 +13,8 @@ import Training from './pages/Training.jsx';
 import Nutrition from './pages/Nutrition.jsx';
 import Attendance from './pages/Attendance.jsx';
 import Achievements from './pages/Achievements.jsx';
+import Activities from './pages/Activities.jsx';
+import ActivityDetail from './pages/ActivityDetail.jsx';
 import Settings from './pages/Settings.jsx';
 
 export default function App() {
@@ -49,6 +51,8 @@ export default function App() {
         <Route path="/training" element={<Training />} />
         <Route path="/nutrition" element={<Nutrition />} />
         <Route path="/attendance" element={<Attendance />} />
+        <Route path="/activities" element={<Activities />} />
+        <Route path="/activities/:id" element={<ActivityDetail />} />
         <Route path="/achievements" element={<Achievements />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />

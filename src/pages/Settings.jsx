@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { api } from '../api/client.js';
 import { StreakFreezeSettings } from '../components/StreakFreezeSettings.jsx';
+import { DevicePairing } from '../components/DevicePairing.jsx';
 import { useTheme } from '../theme/ThemeContext.jsx';
 
 // Injected from package.json at build time (vite define).
@@ -103,6 +104,8 @@ export default function Settings() {
       </div>
 
       <StreakFreezeSettings />
+
+      <DevicePairing />
 
       <div className="section-title"><span className="title">Motivations-Mails</span></div>
       <div className="card">

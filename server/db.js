@@ -85,6 +85,40 @@ export function openDb(path) {
       FROM workout_sets s JOIN workouts w ON w.id = s.workout_id
       WHERE w.user_id = ?`),
 
+    // ---- activities (GPS-tracked outdoor sessions, from the Android app) ----
+    insertActivity: db.prepare(`
+      INSERT INTO activities (user_id, type, day, start_time, end_time, distance_m,
+        duration_s, moving_time_s, avg_speed_mps, max_speed_mps, elevation_gain_m,
+        steps, polyline, point_count, title, note, source, client_uuid, created_at)
+      VALUES (@user_id, @type, @day, @start_time, @end_time, @distance_m,
+        @duration_s, @moving_time_s, @avg_speed_mps, @max_speed_mps, @elevation_gain_m,
+        @steps, @polyline, @point_count, @title, @note, @source, @client_uuid, @now)
+      RETURNING *
+    `),
+    getActivity: db.prepare('SELECT * FROM activities WHERE id = ? AND user_id = ?'),
+    getActivityByUuid: db.prepare('SELECT * FROM activities WHERE user_id = ? AND client_uuid = ?'),
+    listActivities: db.prepare(
+      'SELECT * FROM activities WHERE user_id = ? ORDER BY COALESCE(start_time, created_at) DESC, id DESC LIMIT ?'),
+    deleteActivity: db.prepare('DELETE FROM activities WHERE id = ? AND user_id = ?'),
+    countActivities: db.prepare('SELECT COUNT(*) n FROM activities WHERE user_id = ?'),
+    countActivitiesByType: db.prepare('SELECT COUNT(*) n FROM activities WHERE user_id = ? AND type = ?'),
+    sumActivityDistance: db.prepare('SELECT COALESCE(SUM(distance_m), 0) m FROM activities WHERE user_id = ?'),
+
+    // ---- device pairing (native app auth) ----
+    insertPairing: db.prepare(`
+      INSERT INTO pairing_codes (code, user_id, created_at, expires_at, consumed)
+      VALUES (@code, @user_id, @now, @expires, 0)`),
+    getPairing: db.prepare('SELECT * FROM pairing_codes WHERE code = ?'),
+    consumePairing: db.prepare('UPDATE pairing_codes SET consumed = 1 WHERE code = ?'),
+    insertDeviceToken: db.prepare(`
+      INSERT INTO device_tokens (user_id, name, token_hash, created_at, last_seen_at)
+      VALUES (@user_id, @name, @token_hash, @now, @now) RETURNING *`),
+    deviceByHash: db.prepare('SELECT * FROM device_tokens WHERE token_hash = ?'),
+    touchDevice: db.prepare('UPDATE device_tokens SET last_seen_at = ? WHERE id = ?'),
+    listDevices: db.prepare(
+      'SELECT id, name, created_at, last_seen_at, revoked FROM device_tokens WHERE user_id = ? AND revoked = 0 ORDER BY created_at DESC'),
+    revokeDevice: db.prepare('UPDATE device_tokens SET revoked = 1 WHERE id = ? AND user_id = ?'),
+
     // nutrition
     upsertNutrition: db.prepare(`
       INSERT INTO nutrition_logs (user_id, day, kcal, protein_g, carbs_g, fat_g, quality, water_ml, note, created_at)

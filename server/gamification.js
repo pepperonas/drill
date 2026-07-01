@@ -15,6 +15,7 @@ export const XP = {
   metric: 10,       // logging a body metric
   nutrition: 15,    // logging nutrition for a day
   streak_bonus: 5,  // per current-streak day, capped
+  activity: 20,     // base for a GPS activity (+ a distance bonus, see routes/activities)
 };
 const STREAK_BONUS_CAP = 50;
 
@@ -255,6 +256,15 @@ export const ACHIEVEMENTS = [
   // --- Ernährung ---
   { code: 'nutrition_7',    name: 'Bewusst',            desc: '7 Tage Ernährung getrackt',        icon: '🥗', xp: 70 },
   { code: 'nutrition_30',   name: 'Ernährungsprofi',    desc: '30 Tage Ernährung getrackt',       icon: '🍱', xp: 300 },
+  // --- Aktivitäten (GPS-getrackt, Android-App) ---
+  { code: 'first_activity', name: 'Losgezogen',         desc: 'Erste GPS-Aktivität aufgezeichnet', icon: '🗺️', xp: 30 },
+  { code: 'activities_10',  name: 'Unterwegs',          desc: '10 Aktivitäten aufgezeichnet',      icon: '🚶', xp: 120 },
+  { code: 'activities_50',  name: 'Entdecker',          desc: '50 Aktivitäten aufgezeichnet',      icon: '🧭', xp: 400 },
+  { code: 'distance_50km',  name: '50 Kilometer',       desc: 'Insgesamt 50 km zurückgelegt',      icon: '📍', xp: 150 },
+  { code: 'distance_250km', name: '250 Kilometer',      desc: 'Insgesamt 250 km zurückgelegt',     icon: '🌍', xp: 500 },
+  { code: 'distance_1000km',name: '1000 Kilometer',     desc: 'Insgesamt 1000 km zurückgelegt',    icon: '🚀', xp: 1500 },
+  { code: 'run_10',         name: 'Läufer',             desc: '10 Läufe aufgezeichnet',            icon: '🏃', xp: 150 },
+  { code: 'cycle_10',       name: 'Radfahrer',          desc: '10 Radtouren aufgezeichnet',        icon: '🚴', xp: 150 },
 ];
 const BY_CODE = Object.fromEntries(ACHIEVEMENTS.map(a => [a.code, a]));
 
@@ -312,6 +322,15 @@ export function checkAchievements(db, user, ctx, day) {
   // nutrition
   if (ctx.nutritionDays >= 7) unlock('nutrition_7');
   if (ctx.nutritionDays >= 30) unlock('nutrition_30');
+  // activities (GPS)
+  if ((ctx.activities || 0) >= 1) unlock('first_activity');
+  if ((ctx.activities || 0) >= 10) unlock('activities_10');
+  if ((ctx.activities || 0) >= 50) unlock('activities_50');
+  if ((ctx.totalDistanceM || 0) >= 50000) unlock('distance_50km');
+  if ((ctx.totalDistanceM || 0) >= 250000) unlock('distance_250km');
+  if ((ctx.totalDistanceM || 0) >= 1000000) unlock('distance_1000km');
+  if ((ctx.runCount || 0) >= 10) unlock('run_10');
+  if ((ctx.cycleCount || 0) >= 10) unlock('cycle_10');
 
   return newly;
 }

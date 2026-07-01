@@ -80,6 +80,16 @@ export const api = {
   // ---- streak freeze ----
   streakFreeze: () => req('GET', '/streak-freeze'),
   updateStreakFreeze: (cfg) => req('PUT', '/streak-freeze', cfg),
+
+  // ---- GPS activities (from the Android app) ----
+  activities: (limit = 50) => req('GET', `/activities?limit=${limit}`),
+  activity: (id) => req('GET', `/activities/${id}`),
+  delActivity: (id) => req('DELETE', `/activities/${id}`),
+
+  // ---- device pairing (Android app) ----
+  pairingStart: () => req('POST', '/pairing/start'),
+  pairingDevices: () => req('GET', '/pairing/devices'),
+  revokeDevice: (id) => req('POST', `/pairing/devices/${id}/revoke`),
 };
 
 export function loginUrl() { return '/api/auth/google'; }

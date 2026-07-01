@@ -13,6 +13,8 @@ import { trackerRoutes } from './routes/trackers.js';
 import { streakFreezeRoutes } from './routes/streakfreeze.js';
 import { dashboardRoutes } from './routes/dashboard.js';
 import { accountRoutes } from './routes/account.js';
+import { pairingRoutes } from './routes/pairing.js';
+import { activitiesRoutes } from './routes/activities.js';
 
 export function createApp(db) {
   const auth = makeAuth(db);
@@ -25,6 +27,7 @@ export function createApp(db) {
   const limitAuth = createLimiter({ windowMs: 60_000, max: 30 });
   app.use('/api/', limitAll);
   app.use('/api/auth/', limitAuth);
+  app.use('/api/pairing/', limitAuth);   // stricter: guards code claim/brute-force
 
   // health
   app.get('/api/health', (req, res) =>
@@ -39,14 +42,16 @@ export function createApp(db) {
     res.json({ id: u.id, email: u.email, name: u.name, picture: u.picture, tz: u.tz });
   });
 
-  // accountRoutes FIRST: it carries the *public* email confirm/unsubscribe
-  // endpoints (reachable from email links without a session). The other feature
-  // routers apply a blanket `requireUser`, so if they were mounted earlier they
-  // would 401 those public links before account routes could handle them.
+  // accountRoutes + pairingRoutes FIRST: they carry *public* endpoints (email
+  // confirm/unsubscribe links; the app's /pairing/claim) that must be reachable
+  // without a session. The other feature routers apply a blanket `requireUser`,
+  // so if they were mounted earlier they would 401 those public routes first.
   app.use('/api', accountRoutes(db, auth));
+  app.use('/api', pairingRoutes(db, auth));
 
   // feature routers (each self-gates with requireUser)
   app.use('/api', trackingRoutes(db, auth));
+  app.use('/api', activitiesRoutes(db, auth));
   app.use('/api', trackerRoutes(db, auth));
   app.use('/api', streakFreezeRoutes(db, auth));
   app.use('/api', dashboardRoutes(db, auth));

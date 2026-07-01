@@ -12,6 +12,7 @@ import {
 } from '../gamification.js';
 import { est1RM, workoutIntensity, intensityXp } from '../trackers.js';
 import { ensureFreeze, reconcileEarn } from '../streakfreeze.js';
+import { gamiCtx, gamiResult } from '../gami-helpers.js';
 
 /**
  * Detect new personal records from a workout's sets. For each exercise we keep
@@ -42,26 +43,6 @@ const KNOWN_METRICS = {
   weight: 'kg', bodyfat: '%', waist: 'cm', chest: 'cm', hip: 'cm',
   arm: 'cm', thigh: 'cm', neck: 'cm',
 };
-
-function gamiCtx(db, user) {
-  return {
-    checkins: db.countCheckins.get(user.id).n,
-    workouts: db.countWorkouts.get(user.id).n,
-    volume: db.sumVolume.get(user.id).v,
-    metrics: db.countEntries.get(user.id).n,
-    nutritionDays: db.listNutrition.all(user.id, '0000-00-00').length,
-    records: db.listPRs.all(user.id).length,
-    trackers: db.countTrackers.get(user.id).n,
-  };
-}
-
-function gamiResult(db, user, newly) {
-  return {
-    xp: user.xp, level: user.level,
-    streak: user.streak_current,
-    unlocked: newly,
-  };
-}
 
 export function trackingRoutes(db, auth) {
   const r = express.Router();

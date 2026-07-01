@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.9.0 — GPS activities + device pairing (server & web) (2026-07-01)
+
+Backend + web foundation for the native **drill · go** Android companion app that
+GPS-tracks walks/runs/rides and uploads them.
+
+- **Activities API** (`server/routes/activities.js`, migration `008_activities`):
+  `POST/GET/DELETE /api/activities`. Uploads carry an encoded polyline, distance,
+  duration, speed and steps; they award XP (`20 + 6/km`, capped) reversibly, count
+  the day toward the streak via an idempotent check-in, and are idempotent on
+  `client_uuid` (offline-sync retries never double-count).
+- **Device pairing** (`server/routes/pairing.js`, migration `009_device_pairing`):
+  the web mints a short-lived code (Settings → **Gerät koppeln**), the app exchanges
+  it for an opaque bearer token (stored only as a SHA-256 hash, revocable).
+  `requireUser` now accepts `Authorization: Bearer` in addition to the cookie.
+- **New achievements:** Losgezogen 🗺️, Unterwegs/Entdecker 🚶🧭, 50/250/1000 km
+  📍🌍🚀, Läufer 🏃, Radfahrer 🚴.
+- **Web:** new **Aktivitäten** page (`/activities` + detail) with a **MapLibre**
+  keyless route map (lazy-loaded, own chunk) and a dependency-free SVG route
+  thumbnail in the list; entry point from the dashboard.
+- Tests **79 → 90** (activities + pairing end-to-end). SW cache -> v1.9.0.
+
 ## v1.8.2 — Public email links + expanded tests (2026-06-26)
 
 - **Fix: email confirm/unsubscribe links required a session.** Those endpoints are

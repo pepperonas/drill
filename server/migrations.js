@@ -302,4 +302,64 @@ const MIGRATIONS = [
     ALTER TABLE workout_sets ADD COLUMN set_count INTEGER NOT NULL DEFAULT 1;
     ALTER TABLE workouts ADD COLUMN intensity INTEGER;
   `],
+
+  // ---------------------------------------------------------------------------
+  // 008: GPS-tracked outdoor activities (walk/run/cycle/hike), uploaded by the
+  // native Android companion app. The route is stored as an encoded polyline
+  // (precision 5). `client_uuid` makes uploads idempotent so offline sync
+  // retries never double-count. Kept separate from `workouts` (gym-focused).
+  // ---------------------------------------------------------------------------
+  ['008_activities', `
+    CREATE TABLE activities (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      type          TEXT NOT NULL,          -- walk | run | cycle | hike | other
+      day           TEXT NOT NULL,          -- 'YYYY-MM-DD' in the user's tz
+      start_time    INTEGER,                -- unix seconds
+      end_time      INTEGER,
+      distance_m    REAL,
+      duration_s    INTEGER,                -- elapsed
+      moving_time_s INTEGER,                -- while moving (for pace)
+      avg_speed_mps REAL,
+      max_speed_mps REAL,
+      elevation_gain_m REAL,
+      steps         INTEGER,
+      polyline      TEXT,                   -- encoded polyline (precision 5)
+      point_count   INTEGER,
+      title         TEXT,
+      note          TEXT,
+      source        TEXT,                   -- 'android' | ...
+      client_uuid   TEXT,                   -- idempotency key from the client
+      created_at    INTEGER NOT NULL,
+      UNIQUE(user_id, client_uuid)
+    );
+    CREATE INDEX idx_activities_user_day ON activities(user_id, day);
+    CREATE INDEX idx_activities_user_type ON activities(user_id, type);
+  `],
+
+  // ---------------------------------------------------------------------------
+  // 009: device pairing for the native app. The web app (already logged in)
+  // issues a short-lived pairing code; the app exchanges it for an opaque device
+  // token. Only the SHA-256 hash of the token is stored, and it is revocable.
+  // ---------------------------------------------------------------------------
+  ['009_device_pairing', `
+    CREATE TABLE device_tokens (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name         TEXT,
+      token_hash   TEXT UNIQUE NOT NULL,    -- sha256(opaque token)
+      created_at   INTEGER NOT NULL,
+      last_seen_at INTEGER,
+      revoked      INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE INDEX idx_device_tokens_user ON device_tokens(user_id);
+
+    CREATE TABLE pairing_codes (
+      code        TEXT PRIMARY KEY,
+      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at  INTEGER NOT NULL,
+      expires_at  INTEGER NOT NULL,
+      consumed    INTEGER NOT NULL DEFAULT 0
+    );
+  `],
 ];
