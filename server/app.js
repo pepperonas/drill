@@ -57,5 +57,14 @@ export function createApp(db) {
   app.use('/api', dashboardRoutes(db, auth));
 
   app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));
+
+  // Last-resort error handler: turn a thrown request (e.g. a DB constraint) into
+  // a 500 instead of crashing the process. (better-sqlite3 is synchronous, so
+  // Express catches these.)
+  app.use((err, req, res, next) => {
+    console.error('[drill] unhandled route error:', err);
+    if (res.headersSent) return next(err);
+    res.status(500).json({ error: 'internal_error' });
+  });
   return app;
 }

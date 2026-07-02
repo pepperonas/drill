@@ -18,6 +18,13 @@ export const XP = {
   activity: 20,     // base for a GPS activity (+ a distance bonus, see routes/activities)
 };
 const STREAK_BONUS_CAP = 50;
+const ACTIVITY_XP_CAP = 120;
+
+/** XP for a GPS activity: base + a gentle distance bonus (6 XP/km), capped. */
+export function activityXp(distanceM) {
+  const km = (Number(distanceM) || 0) / 1000;
+  return Math.min(ACTIVITY_XP_CAP, Math.max(XP.activity, Math.round(XP.activity + km * 6)));
+}
 
 // XP required to reach level n (cumulative). Curve: 100 * n^1.6 rounded.
 export function xpForLevel(level) {
@@ -142,6 +149,10 @@ export function rebuildXp(db, user) {
     awardXp(db, user, XP.workout, 'workout', w.day, `workout:${w.id}`);
     const bonus = intensityXp(workoutIntensity(db.listSets.all(w.id)).points);
     if (bonus > 0) awardXp(db, user, bonus, 'workout_intensity', w.day, `workout:${w.id}`);
+  }
+  // GPS activities: re-derive the distance-based XP
+  for (const a of db.listActivities.all(user.id, 100000)) {
+    awardXp(db, user, activityXp(a.distance_m), 'activity:' + a.type, a.day, `activity:${a.id}`);
   }
   // tracker entries (each contributes its tracker's current xp)
   for (const e of db.allEntriesWithXp.all(user.id)) {

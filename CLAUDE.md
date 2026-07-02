@@ -45,7 +45,7 @@ npm run build                   # -> dist/
 # backend
 cd server && npm install
 npm run dev                     # node --watch, http://127.0.0.1:4252
-npm test                        # node:test — 90 tests (logic, analytics, session, time, cron, email, API, activities, pairing)
+npm test                        # node:test — 91 tests (logic, analytics, session, time, cron, email, API, activities, pairing)
 ```
 
 Local dev needs `server/.env` (copy from `server/.env.example`). With `APP_ORIGIN=http://...`

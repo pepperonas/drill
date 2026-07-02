@@ -9,18 +9,11 @@
  */
 import express from 'express';
 import { dayInTz } from '../time.js';
-import { awardXp, reverseXpByRef, recomputeStreak, checkAchievements, XP } from '../gamification.js';
+import { awardXp, reverseXpByRef, recomputeStreak, checkAchievements, activityXp, XP } from '../gamification.js';
 import { ensureFreeze, reconcileEarn } from '../streakfreeze.js';
 import { gamiCtx, gamiResult } from '../gami-helpers.js';
 
 const TYPES = new Set(['walk', 'run', 'cycle', 'hike', 'other']);
-
-// Base XP + a gentle distance bonus (6 XP/km), capped so a marathon can't
-// distort the level economy.
-export function activityXp(distanceM) {
-  const km = (Number(distanceM) || 0) / 1000;
-  return Math.min(120, Math.max(XP.activity, Math.round(XP.activity + km * 6)));
-}
 
 export function activitiesRoutes(db, auth) {
   const r = express.Router();
@@ -55,19 +48,28 @@ export function activitiesRoutes(db, auth) {
     }
 
     const day = b.day || dayInTz(req.user.tz);
-    const num = (x) => (x == null || x === '' ? null : Number(x));
-    const a = db.insertActivity.get({
-      user_id: req.user.id, type, day,
-      start_time: num(b.start_time), end_time: num(b.end_time),
-      distance_m, duration_s: num(b.duration_s), moving_time_s: num(b.moving_time_s),
-      avg_speed_mps: num(b.avg_speed_mps), max_speed_mps: num(b.max_speed_mps),
-      elevation_gain_m: num(b.elevation_gain_m), steps: num(b.steps),
-      polyline: String(b.polyline).slice(0, 200000), point_count: num(b.point_count),
-      title: b.title ? String(b.title).slice(0, 120) : null,
-      note: b.note ? String(b.note).slice(0, 500) : null,
-      source: b.source ? String(b.source).slice(0, 40) : 'android',
-      client_uuid, now: now(),
-    });
+    // Non-finite input (e.g. "abc") → null, never NaN (which SQLite stores oddly).
+    const num = (x) => { if (x == null || x === '') return null; const n = Number(x); return Number.isFinite(n) ? n : null; };
+    let a;
+    try {
+      a = db.insertActivity.get({
+        user_id: req.user.id, type, day,
+        start_time: num(b.start_time), end_time: num(b.end_time),
+        distance_m, duration_s: num(b.duration_s), moving_time_s: num(b.moving_time_s),
+        avg_speed_mps: num(b.avg_speed_mps), max_speed_mps: num(b.max_speed_mps),
+        elevation_gain_m: num(b.elevation_gain_m), steps: num(b.steps),
+        polyline: String(b.polyline).slice(0, 200000), point_count: num(b.point_count),
+        title: b.title ? String(b.title).slice(0, 120) : null,
+        note: b.note ? String(b.note).slice(0, 500) : null,
+        source: b.source ? String(b.source).slice(0, 40) : 'android',
+        client_uuid, now: now(),
+      });
+    } catch (e) {
+      // Race: a concurrent retry with the same client_uuid won the UNIQUE insert.
+      const existing = client_uuid && db.getActivityByUuid.get(req.user.id, client_uuid);
+      if (existing) return res.json({ activity: existing, gami: gamiResult(db, req.user, []), duplicate: true });
+      throw e;
+    }
 
     // Base + distance XP (reversible via the activity ref).
     awardXp(db, req.user, activityXp(distance_m), 'activity:' + type, day, `activity:${a.id}`);

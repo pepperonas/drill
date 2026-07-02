@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.10.0 — Dialog fixes, gym quick-starts & audit fixes (2026-07-02)
+
+- **Fix: dialogs got clipped / the save button was cut off** — sheets used `vh`
+  (breaks with the mobile keyboard) and had no always-visible primary action. Now
+  `dvh` + a **sticky action footer** (Workout/Ernährung/Tracker/Streak-Schutz), and
+  on **wide screens the bottom-sheet becomes a centered modal**. "Speichern" is
+  always reachable.
+- **Fix: Hantel-/Gym-Training was buried** — the Schnellstart only had home/bodyweight
+  presets. Added **weighted gym quick-starts** (Ganzkörper · Push · Pull · Beine) in
+  their own 🏋️ Gym row, a built-in **gym exercise library** (Bankdrücken, Kniebeuge,
+  Kreuzheben, Rudern, Klimmzüge, …) in the autocomplete, and grouped the picker
+  Gym / Zuhause.
+- **Backend audit fixes:** `rebuildXp` now re-derives **GPS-activity XP** (it was
+  dropped on a ledger rebuild — real bug); a global Express **error handler** (a
+  thrown request → 500 instead of a crash); activity uploads reject non-finite
+  numbers and survive a concurrent same-`client_uuid` race; pairing-code generation
+  guards against collision exhaustion.
+- A11y: toasts announce via `role=status`/`aria-live`; toggle chips get `aria-pressed`.
+- Tests **90 → 91** (rebuildXp-with-activity regression). SW cache -> v1.10.0.
+
 ## v1.9.0 — GPS activities + device pairing (server & web) (2026-07-01)
 
 Backend + web foundation for the native **drill · go** Android companion app that

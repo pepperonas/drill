@@ -6,7 +6,7 @@ import { Sheet } from '../components/Sheet.jsx';
 import { Select } from '../components/Select.jsx';
 import { WORKOUT_CATEGORIES, fmtDayLong } from '../lib/util.js';
 import {
-  WORKOUT_PLACES, WORKOUT_TEMPLATES, BODYWEIGHT_EXERCISES, placeMeta,
+  WORKOUT_PLACES, WORKOUT_TEMPLATES, BODYWEIGHT_EXERCISES, GYM_EXERCISES, placeMeta,
 } from '../lib/workoutTemplates.js';
 
 const emptySet = () => ({ exercise: '', setCount: '', weight: '', reps: '' });
@@ -40,8 +40,8 @@ export default function Training() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  // built-in bodyweight names + the user's own exercises, de-duplicated.
-  const exerciseLibrary = [...new Set([...exercises, ...BODYWEIGHT_EXERCISES])];
+  // the user's own exercises + built-in gym + bodyweight names, de-duplicated.
+  const exerciseLibrary = [...new Set([...exercises, ...GYM_EXERCISES, ...BODYWEIGHT_EXERCISES])];
   const categories = [...WORKOUT_CATEGORIES, ...customCats.filter((c) => !WORKOUT_CATEGORIES.includes(c))];
 
   const openSheet = () => { setForm(initForm(today)); setOpen(true); };
@@ -138,10 +138,18 @@ export default function Training() {
       <button className="fab" onClick={openSheet}><span className="plus">+</span> Workout</button>
 
       <Sheet open={open} onClose={() => setOpen(false)} title="Workout protokollieren">
-        {/* Quick-start: log a short session in two taps. */}
-        <div className="label" style={{ marginBottom: 8 }}>Schnellstart</div>
+        {/* Quick-start: log a session in two taps — grouped Gym / Zuhause. */}
+        <div className="label" style={{ marginBottom: 8 }}>🏋️ Gym · Schnellstart</div>
+        <div className="chips" style={{ marginBottom: 14 }}>
+          {WORKOUT_TEMPLATES.filter((t) => t.group === 'gym').map((t) => (
+            <button type="button" key={t.id} className="chip" onClick={() => applyTemplate(t)}>
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="label" style={{ marginBottom: 8 }}>🏠 Zuhause · Schnellstart</div>
         <div className="chips" style={{ marginBottom: 16 }}>
-          {WORKOUT_TEMPLATES.map((t) => (
+          {WORKOUT_TEMPLATES.filter((t) => t.group === 'home').map((t) => (
             <button type="button" key={t.id} className="chip" onClick={() => applyTemplate(t)}>
               {t.icon} {t.label}
             </button>
@@ -151,7 +159,7 @@ export default function Training() {
         <label className="field"><span>Ort</span>
           <div className="chips">
             {WORKOUT_PLACES.map((p) => (
-              <button type="button" key={p.id} className={`chip${form.place === p.id ? ' sel' : ''}`} onClick={() => pickPlace(p.id)}>
+              <button type="button" key={p.id} className={`chip${form.place === p.id ? ' sel' : ''}`} aria-pressed={form.place === p.id} onClick={() => pickPlace(p.id)}>
                 {p.icon} {p.label}
               </button>
             ))}
@@ -205,9 +213,11 @@ export default function Training() {
         <div className="body" style={{ fontSize: '.8rem', margin: '-2px 2px 10px' }}>
           Gewicht ist optional — 3 Sätze mit Wiederholungen genügen. Alle Sätze, Wdh. &amp; Gewichte zählen in die ⚡ Intensität.
         </div>
-        <button className="btn outline block" style={{ marginBottom: 16 }} onClick={addSetRow}>+ Satz hinzufügen</button>
+        <button className="btn outline block" onClick={addSetRow}>+ Satz hinzufügen</button>
 
-        <button className="btn filled block" disabled={busy} onClick={save}>Workout speichern</button>
+        <div className="sheet-actions">
+          <button className="btn filled block" disabled={busy} onClick={save}>Workout speichern</button>
+        </div>
       </Sheet>
     </div>
   );

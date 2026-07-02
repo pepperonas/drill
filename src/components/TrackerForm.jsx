@@ -146,10 +146,12 @@ export function TrackerForm({ initial, onSave, onCancel, busy }) {
         <input className="input" type="number" value={f.xp} onChange={(e) => set('xp', e.target.value)} />
       </label>
 
-      <button className="btn filled block" disabled={busy || !f.name.trim()} onClick={() => onSave(f)} style={{ marginTop: 6 }}>
-        {initial ? 'Änderungen speichern' : 'Tracker erstellen'}
-      </button>
-      {initial && <button className="btn text block" style={{ marginTop: 8 }} onClick={onCancel}>Abbrechen</button>}
+      <div className="sheet-actions">
+        <button className="btn filled block" disabled={busy || !f.name.trim()} onClick={() => onSave(f)}>
+          {initial ? 'Änderungen speichern' : 'Tracker erstellen'}
+        </button>
+        {initial && <button className="btn text block" onClick={onCancel}>Abbrechen</button>}
+      </div>
     </div>
   );
 }

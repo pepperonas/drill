@@ -14,7 +14,7 @@ process.env.SESSION_SECRET = 'testsecrettestsecrettestsecret12';
 const { openDb } = await import('../db.js');
 const { createApp } = await import('../app.js');
 const { sign } = await import('../session.js');
-const { activityXp } = await import('../routes/activities.js');
+const { activityXp } = await import('../gamification.js');
 
 let server, base, db;
 

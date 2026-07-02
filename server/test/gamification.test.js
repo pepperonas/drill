@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { openDb } from '../db.js';
 import {
   xpForLevel, levelForXp, levelProgress, awardXp, recomputeStreak,
-  effectiveStreak, checkAchievements, reverseXpByRef, rebuildXp, XP,
+  effectiveStreak, checkAchievements, reverseXpByRef, rebuildXp, activityXp, XP,
 } from '../gamification.js';
 import { workoutIntensity, intensityXp } from '../trackers.js';
 
@@ -140,6 +140,21 @@ test('rebuildXp re-derives XP from check-ins, workouts, nutrition, entries and a
   const r = rebuildXp(db, u);
   // checkin 25 + streak bonus 5 + workout 40 + nutrition 15 + entry 10 + achievement 20 = 115
   assert.equal(r.xp, 115);
+});
+
+test('rebuildXp re-derives GPS activity XP (regression: was dropped on rebuild)', () => {
+  const db = openDb(':memory:');
+  const u = freshUser(db);
+  db.insertActivity.get({
+    user_id: u.id, type: 'run', day: '2026-01-01', start_time: 1, end_time: 2,
+    distance_m: 5000, duration_s: 1800, moving_time_s: 1700, avg_speed_mps: 2.9,
+    max_speed_mps: 4, elevation_gain_m: null, steps: 6000, polyline: 'abc',
+    point_count: 3, title: null, note: null, source: 'test', client_uuid: 'r1', now: 1,
+  });
+  const r = rebuildXp(db, u);
+  assert.equal(r.xp, activityXp(5000));          // 50 — the activity XP is restored
+  reverseXpByRef(db, u, 'activity:1');
+  assert.equal(u.xp, 0);
 });
 
 test('progress percentage stays within 0..100', () => {

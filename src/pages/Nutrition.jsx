@@ -106,7 +106,9 @@ export default function Nutrition() {
             ))}
           </div>
         </div>
-        <button className="btn filled block" disabled={busy} onClick={save}>Speichern</button>
+        <div className="sheet-actions">
+          <button className="btn filled block" disabled={busy} onClick={save}>Speichern</button>
+        </div>
       </Sheet>
     </div>
   );

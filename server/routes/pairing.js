@@ -29,11 +29,12 @@ export function pairingRoutes(db, auth) {
     const created = now();
     const expires = created + 600;
     // Retry on the (astronomically unlikely) code collision.
-    let code;
+    let code = null;
     for (let i = 0; i < 5; i++) {
-      code = genCode(6);
-      if (!db.getPairing.get(code)) break;
+      const c = genCode(6);
+      if (!db.getPairing.get(c)) { code = c; break; }
     }
+    if (!code) return res.status(503).json({ error: 'try_again' });
     db.insertPairing.run({ code, user_id: req.user.id, now: created, expires });
     res.json({ code, expires_at: expires });
   });

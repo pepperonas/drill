@@ -94,8 +94,6 @@ export function StreakFreezeSettings() {
             </label>
             <Switch label="Bei Level-Up +1" checked={f.earn_on_levelup} onChange={(v) => set('earn_on_levelup', v)} />
 
-            <button className="btn filled block" disabled={busy} style={{ marginTop: 18 }} onClick={save}>Speichern</button>
-
             {data.events.length > 0 && (
               <>
                 <div className="label" style={{ margin: '20px 0 8px' }}>Verlauf</div>
@@ -111,6 +109,10 @@ export function StreakFreezeSettings() {
                 </div>
               </>
             )}
+
+            <div className="sheet-actions">
+              <button className="btn filled block" disabled={busy} onClick={save}>Speichern</button>
+            </div>
           </>
         )}
       </Sheet>

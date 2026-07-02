@@ -236,11 +236,34 @@ button { font-family: inherit; }
   background: var(--surface-container); border-radius: var(--shape-2xl) var(--shape-2xl) 0 0;
   padding: 12px 20px calc(28px + env(safe-area-inset-bottom));
   border: 1px solid var(--outline-variant); border-bottom: none;
-  max-height: 88vh; overflow-y: auto;
+  max-height: 88dvh; overflow-y: auto;
   animation: slideup var(--dur-long) var(--ease-spatial);
 }
 @keyframes slideup { from { transform: translateY(100%); } to { transform: none; } }
 .sheet-grab { width: 40px; height: 4px; border-radius: 2px; background: var(--outline); margin: 6px auto 16px; }
+
+/* Pinned primary-action footer: always reachable, even when the form scrolls.
+   Bleeds to the sheet edges and cancels the sheet's bottom padding. */
+.sheet-actions {
+  position: sticky; bottom: 0; z-index: 1;
+  margin: 16px -20px calc(-1 * (28px + env(safe-area-inset-bottom)));
+  padding: 12px 20px calc(16px + env(safe-area-inset-bottom));
+  background: var(--surface-container);
+  border-top: 1px solid var(--outline-variant);
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+/* On wide screens the bottom-sheet becomes a centered modal dialog. */
+@media (min-width: 700px) {
+  .sheet-backdrop { align-items: center; padding: 24px; }
+  .sheet {
+    max-width: 560px; max-height: 88dvh;
+    border-radius: var(--shape-2xl); border-bottom: 1px solid var(--outline-variant);
+    animation: sheetpop var(--dur-long) var(--ease-spatial);
+  }
+  .sheet-grab { display: none; }
+}
+@keyframes sheetpop { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
 
 .skeleton { background: linear-gradient(90deg, var(--surface-container), var(--surface-container-high), var(--surface-container)); background-size: 200% 100%; animation: shimmer 1.3s infinite; border-radius: var(--shape-lg); }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }

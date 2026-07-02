@@ -44,7 +44,7 @@ export function ToastProvider({ children }) {
     <ToastCtx.Provider value={{ show, celebrate }}>
       {children}
       {burst > 0 && <Confetti key={burst} />}
-      <div className="toast-wrap">
+      <div className="toast-wrap" role="status" aria-live="polite" aria-atomic="false">
         {toasts.map((t) => (
           <div key={t.id} className={'toast' + (t.celebrate ? ' celebrate' : '')} onClick={() => dismiss(t.id)}>
             {t.msg}
